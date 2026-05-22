@@ -1,0 +1,3141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResidentHub — Smart Hostel Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        :root {
+            --forest: #0b3b2a;
+            --forest-mid: #155e3f;
+            --forest-light: #1f8b5c;
+            --mint: #4fd1a6;
+            --mint-pale: #c6f4e5;
+            --gold: #e6a817;
+            --gold-pale: #fef3d6;
+            --ink: #0f1e17;
+            --ink2: #26362d;
+            --muted: #5c7165;
+            --ghost: #a0b5a8;
+            --surface: #f4faf6;
+            --surface2: #eaf5ef;
+            --surface3: #dceee4;
+            --card: #ffffff;
+            --border: #d0e4d8;
+            --border2: #b0ccbc;
+            --red: #dc3a3a;
+            --red-pale: #fde8e8;
+            --amber: #d9781a;
+            --amber-pale: #fef2e4;
+            --blue: #1d6ff5;
+            --blue-pale: #e8f1fe;
+            --purple: #7c3aed;
+            --purple-pale: #ede4fe;
+            --teal: #0d9488;
+            --teal-pale: #d2f5f2;
+            --shadow-sm: 0 1px 2px rgba(11, 59, 42, .04), 0 2px 8px rgba(11, 59, 42, .06);
+            --shadow: 0 1px 3px rgba(11, 59, 42, .06), 0 4px 18px rgba(11, 59, 42, .10);
+            --shadow-lg: 0 6px 30px rgba(11, 59, 42, .16);
+            --shadow-xl: 0 12px 48px rgba(11, 59, 42, .22);
+            --r: 10px;
+            --r-lg: 16px;
+            --r-xl: 22px;
+            --r-2xl: 28px;
+            --t: 0.22s cubic-bezier(.4, 0, .2, 1);
+        }
+        html.dark {
+            --forest: #4fd1a6;
+            --forest-mid: #3cb88a;
+            --forest-light: #2ea070;
+            --mint: #4fd1a6;
+            --mint-pale: rgba(79, 209, 166, .12);
+            --gold: #f0c050;
+            --gold-pale: rgba(240, 192, 80, .10);
+            --ink: #e4f2ea;
+            --ink2: #bdd8c8;
+            --muted: #7aa090;
+            --ghost: #456858;
+            --surface: #0a1c14;
+            --surface2: #0e2218;
+            --surface3: #132c1f;
+            --card: #132c1f;
+            --border: #1c3d2a;
+            --border2: #285240;
+            --red: #f56565;
+            --red-pale: rgba(245, 101, 101, .12);
+            --amber: #ed9b35;
+            --amber-pale: rgba(237, 155, 53, .10);
+            --blue: #60a5fa;
+            --blue-pale: rgba(96, 165, 250, .10);
+            --purple: #a78bfa;
+            --purple-pale: rgba(167, 139, 250, .10);
+            --teal: #5eead4;
+            --teal-pale: rgba(94, 234, 212, .10);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, .18), 0 2px 8px rgba(0, 0, 0, .20);
+            --shadow: 0 1px 3px rgba(0, 0, 0, .20), 0 4px 18px rgba(0, 0, 0, .28);
+            --shadow-lg: 0 6px 30px rgba(0, 0, 0, .36);
+            --shadow-xl: 0 12px 48px rgba(0, 0, 0, .44);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+        html {
+            scroll-behavior: smooth
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--surface);
+            color: var(--ink);
+            min-height: 100vh;
+            font-size: 14.5px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            transition: background var(--t), color var(--t)
+        }
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-family: 'Syne', sans-serif;
+            color: var(--ink);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.01em
+        }
+        ::selection {
+            background: var(--mint);
+            color: var(--forest)
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: var(--forest);
+            padding: 0 20px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            backdrop-filter: blur(12px);
+            transition: background var(--t)
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px
+        }
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            letter-spacing: -0.02em
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--mint);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .78rem
+        }
+        .logo-icon i {
+            color: var(--forest)
+        }
+        .logo-badge {
+            font-size: .58rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .13);
+            color: rgba(255, 255, 255, .78);
+            margin-left: 3px
+        }
+        .conn-dot {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .68rem;
+            color: rgba(255, 255, 255, .60)
+        }
+        .conn-dot span.dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 7px #4ade80;
+            animation: pulse-dot 2s infinite
+        }
+        .conn-dot.offline span.dot {
+            background: #f87171;
+            box-shadow: 0 0 7px #f87171;
+            animation: none
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                box-shadow: 0 0 4px #4ade80
+            }
+            50% {
+                box-shadow: 0 0 12px #4ade80, 0 0 20px rgba(74, 222, 128, .5)
+            }
+        }
+        .mode-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, .09);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px
+        }
+        .mode-btn {
+            padding: 6px 15px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .76rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, .62);
+            cursor: pointer;
+            transition: var(--t);
+            white-space: nowrap
+        }
+        .mode-btn.active {
+            background: var(--mint);
+            color: var(--forest);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .15)
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+        .theme-toggle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .09);
+            border: none;
+            color: rgba(255, 255, 255, .65);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--t);
+            font-size: .85rem
+        }
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, .18);
+            color: #fff
+        }
+        .session-pill {
+            font-size: .66rem;
+            padding: 3px 10px;
+            background: rgba(255, 255, 255, .10);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, .65);
+            font-weight: 500
+        }
+
+        /* ── LAYOUT ── */
+        .container {
+            max-width: 1020px;
+            margin: 0 auto;
+            padding: 20px 18px 40px
+        }
+        .section {
+            display: none
+        }
+        .section.active {
+            display: block
+        }
+        .section-head {
+            margin-bottom: 20px
+        }
+        .section-head h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+            letter-spacing: -0.02em
+        }
+        .section-head p {
+            color: var(--muted);
+            font-size: .84rem
+        }
+
+        /* ── TABS ── */
+        .tab-nav {
+            display: flex;
+            gap: 3px;
+            background: var(--surface2);
+            border-radius: var(--r-lg);
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch
+        }
+        .tab-nav::-webkit-scrollbar {
+            display: none
+        }
+        .tab-btn {
+            padding: 7px 14px;
+            border-radius: var(--r);
+            border: none;
+            background: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: .76rem;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            transition: var(--t);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0
+        }
+        .tab-btn i {
+            font-size: .7rem
+        }
+        .tab-btn.active {
+            background: var(--card);
+            color: var(--forest);
+            box-shadow: var(--shadow-sm);
+            font-weight: 700
+        }
+        .tab-btn:hover:not(.active) {
+            color: var(--ink);
+            background: rgba(255, 255, 255, .35)
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--card);
+            border-radius: var(--r-xl);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 14px;
+            transition: var(--t);
+            position: relative
+        }
+        .card:hover {
+            box-shadow: var(--shadow)
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--ink);
+            letter-spacing: -0.01em
+        }
+        .card-title i {
+            color: var(--forest);
+            font-size: .85rem
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px
+        }
+
+        /* ── STATS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px
+        }
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 15px 16px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--t);
+            cursor: default
+        }
+        .stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg)
+        }
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--forest-light);
+            border-radius: var(--r-lg) var(--r-lg) 0 0
+        }
+        .stat.red::before {
+            background: var(--red)
+        }
+        .stat.amber::before {
+            background: var(--amber)
+        }
+        .stat.blue::before {
+            background: var(--blue)
+        }
+        .stat.gold::before {
+            background: var(--gold)
+        }
+        .stat.purple::before {
+            background: var(--purple)
+        }
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--forest);
+            line-height: 1;
+            letter-spacing: -0.02em
+        }
+        .stat.red .stat-num {
+            color: var(--red)
+        }
+        .stat.amber .stat-num {
+            color: var(--amber)
+        }
+        .stat.blue .stat-num {
+            color: var(--blue)
+        }
+        .stat.gold .stat-num {
+            color: var(--gold)
+        }
+        .stat.purple .stat-num {
+            color: var(--purple)
+        }
+        .stat-lbl {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-top: 3px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        /* ── FORMS ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+        @media(max-width:600px) {
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+        .form-group {
+            margin-bottom: 12px
+        }
+        .form-group label {
+            display: block;
+            font-size: .74rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 9px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            background: var(--surface2);
+            color: var(--ink);
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            transition: var(--t)
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--forest-light);
+            background: var(--card);
+            box-shadow: 0 0 0 3px rgba(31, 139, 92, .14)
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 75px
+        }
+        .form-group select {
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%235c7165'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--r);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: .82rem;
+            cursor: pointer;
+            transition: var(--t);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            letter-spacing: 0.01em
+        }
+        .btn:active {
+            transform: scale(.97)
+        }
+        .btn-pri {
+            background: var(--forest);
+            color: #fff;
+            box-shadow: var(--shadow-sm)
+        }
+        .btn-pri:hover {
+            background: var(--forest-mid);
+            box-shadow: var(--shadow)
+        }
+        .btn-ghost {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--muted)
+        }
+        .btn-ghost:hover {
+            border-color: var(--forest);
+            color: var(--forest);
+            background: var(--mint-pale)
+        }
+        .btn-mint {
+            background: var(--mint);
+            color: var(--forest);
+            font-weight: 700
+        }
+        .btn-mint:hover {
+            filter: brightness(.92)
+        }
+        .btn-red {
+            background: var(--red-pale);
+            color: var(--red)
+        }
+        .btn-red:hover {
+            background: var(--red);
+            color: #fff
+        }
+        .btn-sm {
+            padding: 5px 11px;
+            font-size: .73rem;
+            border-radius: 7px
+        }
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none
+        }
+        .btn-wa {
+            background: #25D366;
+            color: #fff
+        }
+        .btn-wa:hover {
+            background: #1eb856
+        }
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center
+        }
+
+        /* ── BADGES ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: .66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            gap: 3px
+        }
+        .badge-green {
+            background: var(--mint-pale);
+            color: var(--forest-light)
+        }
+        .badge-red {
+            background: var(--red-pale);
+            color: var(--red)
+        }
+        .badge-amber {
+            background: var(--amber-pale);
+            color: var(--amber)
+        }
+        .badge-blue {
+            background: var(--blue-pale);
+            color: var(--blue)
+        }
+        .badge-purple {
+            background: var(--purple-pale);
+            color: var(--purple)
+        }
+        .badge-ghost {
+            background: var(--surface2);
+            color: var(--muted)
+        }
+        .badge-teal {
+            background: var(--teal-pale);
+            color: var(--teal)
+        }
+
+        /* ── TABLE ── */
+        .tbl-wrap {
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            overflow-x: auto
+        }
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .8rem;
+            min-width: 600px
+        }
+        .tbl thead {
+            background: var(--surface2);
+            position: sticky;
+            top: 0
+        }
+        .tbl th {
+            padding: 10px 13px;
+            text-align: left;
+            font-size: .66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+            white-space: nowrap
+        }
+        .tbl td {
+            padding: 9px 13px;
+            border-top: 1px solid var(--border);
+            vertical-align: middle
+        }
+        .tbl tr:hover td {
+            background: var(--surface2);
+            transition: background .12s
+        }
+        .tbl td .name-cell {
+            font-weight: 600;
+            color: var(--ink)
+        }
+        .tbl td .sub {
+            font-size: .71rem;
+            color: var(--muted);
+            margin-top: 1px
+        }
+
+        /* ── SEARCH ── */
+        .search-wrap {
+            position: relative;
+            margin-bottom: 12px
+        }
+        .search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--ghost);
+            font-size: .82rem;
+            pointer-events: none
+        }
+        .search-wrap input {
+            padding-left: 36px;
+            background: var(--card)
+        }
+
+        /* ── ROOM CARDS ── */
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px
+        }
+        .room-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            padding: 18px;
+            transition: var(--t);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer
+        }
+        .room-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px)
+        }
+        .room-card .accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: var(--r-xl) var(--r-xl) 0 0
+        }
+        .rm-blue .accent {
+            background: linear-gradient(90deg, #3B82F6, #93C5FD)
+        }
+        .rm-gold .accent {
+            background: linear-gradient(90deg, #D97706, #FCD34D)
+        }
+        .rm-purple .accent {
+            background: linear-gradient(90deg, #7C3AED, #C4B5FD)
+        }
+        .rm-teal .accent {
+            background: linear-gradient(90deg, #0D9488, #5EEAD4)
+        }
+        .rm-rose .accent {
+            background: linear-gradient(90deg, #E11D48, #FDA4AF)
+        }
+        .room-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 8px 0 2px;
+            letter-spacing: -0.01em
+        }
+        .room-meta {
+            font-size: .74rem;
+            color: var(--muted);
+            margin-bottom: 12px
+        }
+        .room-capacity-bar {
+            height: 6px;
+            background: var(--surface2);
+            border-radius: 3px;
+            margin-bottom: 12px;
+            overflow: hidden
+        }
+        .room-capacity-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .6s cubic-bezier(.4, 0, .2, 1)
+        }
+        .room-capacity-fill.low {
+            background: var(--forest-light)
+        }
+        .room-capacity-fill.mid {
+            background: var(--gold)
+        }
+        .room-capacity-fill.full {
+            background: var(--red)
+        }
+        .beds-row {
+            display: flex;
+            gap: 7px;
+            margin-bottom: 12px;
+            flex-wrap: wrap
+        }
+        .bed-indicator {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .6rem;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            transition: var(--t)
+        }
+        .bed-indicator.open {
+            background: var(--mint-pale);
+            border-color: var(--forest-light);
+            color: var(--forest-light)
+        }
+        .bed-indicator.taken {
+            background: var(--red-pale);
+            border-color: var(--red);
+            color: var(--red)
+        }
+        .room-occupants {
+            font-size: .76rem
+        }
+        .room-occupants .occ-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--ink2)
+        }
+        .room-occupants .occ-item:last-child {
+            border: none
+        }
+        .room-occupants .occ-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--mint-pale);
+            color: var(--forest);
+            font-size: .58rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0
+        }
+
+        /* ── NOTICES ── */
+        .notice-card {
+            border-left: 4px solid var(--gold);
+            padding: 15px 17px;
+            border-radius: var(--r-lg);
+            margin-bottom: 10px
+        }
+        .notice-card.urgent {
+            border-left-color: var(--red);
+            background: var(--red-pale)
+        }
+        .notice-card.important {
+            border-left-color: var(--amber);
+            background: var(--amber-pale)
+        }
+        .notice-date {
+            font-size: .7rem;
+            color: var(--muted);
+            margin-bottom: 2px
+        }
+        .notice-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: .9rem;
+            margin-bottom: 4px
+        }
+        .notice-body {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.6
+        }
+
+        /* ── RULES BOX ── */
+        .rules-scroll {
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 16px;
+            font-size: .82rem;
+            line-height: 1.8;
+            margin-bottom: 14px
+        }
+        .rules-scroll h4 {
+            font-family: 'Syne', sans-serif;
+            color: var(--forest);
+            margin: 12px 0 5px;
+            font-size: .84rem
+        }
+        .rules-scroll ol,
+        .rules-scroll ul {
+            padding-left: 18px
+        }
+        .rules-scroll li {
+            margin-bottom: 3px
+        }
+        .accept-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 12px;
+            background: var(--mint-pale);
+            border-radius: var(--r);
+            margin-bottom: 12px
+        }
+        .accept-row input[type=checkbox] {
+            width: 17px;
+            height: 17px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            accent-color: var(--forest);
+            cursor: pointer
+        }
+        .accept-row label {
+            font-size: .82rem;
+            color: var(--ink2);
+            cursor: pointer
+        }
+
+        /* ── LEDGER ── */
+        .balance-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 4px 9px;
+            border-radius: 20px;
+            font-size: .71rem;
+            font-weight: 700
+        }
+        .balance-chip.pos {
+            background: var(--mint-pale);
+            color: var(--forest)
+        }
+        .balance-chip.neg {
+            background: var(--red-pale);
+            color: var(--red)
+        }
+        .balance-chip.zero {
+            background: var(--surface2);
+            color: var(--muted)
+        }
+
+        /* ── MODALS ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 28, 20, .58);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            backdrop-filter: blur(3px)
+        }
+        .modal-overlay.open {
+            display: flex;
+            animation: fadeIn .18s ease
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+            to {
+                opacity: 1
+            }
+        }
+        .modal {
+            background: var(--card);
+            border-radius: var(--r-2xl);
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 86vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp .22s cubic-bezier(.4, 0, .2, 1)
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(.97)
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px
+        }
+        .modal-head h3 {
+            font-size: 1rem;
+            letter-spacing: -0.01em
+        }
+        .modal-close {
+            background: var(--surface2);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--t)
+        }
+        .modal-close:hover {
+            background: var(--red-pale);
+            color: var(--red)
+        }
+
+        /* ── TOAST ── */
+        .toasts {
+            position: fixed;
+            top: 68px;
+            right: 16px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            pointer-events: none
+        }
+        .toast {
+            padding: 11px 16px;
+            border-radius: var(--r);
+            font-size: .8rem;
+            font-weight: 600;
+            animation: toastIn .28s cubic-bezier(.4, 0, .2, 1);
+            max-width: 300px;
+            pointer-events: all;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            letter-spacing: 0.01em
+        }
+        .toast.success {
+            background: #065F46;
+            color: #A7F3D0
+        }
+        .toast.error {
+            background: #7F1D1D;
+            color: #FECACA
+        }
+        .toast.warning {
+            background: #78350F;
+            color: #FDE68A
+        }
+        .toast.info {
+            background: #1E3A5F;
+            color: #BAD8F9
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(24px)
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        /* ── LOGIN ── */
+        .login-wrap {
+            min-height: 65vh;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+        .login-card {
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            padding: 28px
+        }
+        .login-card .shield {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--forest), var(--forest-light));
+            border-radius: var(--r-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 1.5rem;
+            color: #fff
+        }
+        .login-card h2 {
+            margin-bottom: 4px;
+            font-size: 1.25rem
+        }
+        .login-card p {
+            color: var(--muted);
+            font-size: .82rem;
+            margin-bottom: 20px
+        }
+        .lockout-msg {
+            font-size: .78rem;
+            color: var(--red);
+            font-weight: 600;
+            margin-top: 6px
+        }
+        .login-attempts {
+            font-size: .73rem;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        /* ── ACTIVITY FEED ── */
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border)
+        }
+        .activity-item:last-child {
+            border: none
+        }
+        .activity-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--forest-light);
+            margin-top: 5px;
+            flex-shrink: 0
+        }
+        .activity-text {
+            font-size: .8rem;
+            color: var(--ink2);
+            flex: 1
+        }
+        .activity-time {
+            font-size: .68rem;
+            color: var(--ghost);
+            white-space: nowrap
+        }
+
+        /* ── UTIL TABS ── */
+        .util-tabs {
+            display: flex;
+            gap: 7px;
+            margin-bottom: 12px
+        }
+        .util-tab {
+            padding: 6px 14px;
+            border-radius: var(--r);
+            font-size: .78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: none;
+            color: var(--muted);
+            transition: var(--t)
+        }
+        .util-tab.active {
+            background: var(--forest);
+            color: #fff;
+            border-color: var(--forest)
+        }
+
+        /* ── ACTION ROW ── */
+        .action-row {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            align-items: center
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 35px 16px;
+            color: var(--ghost)
+        }
+        .empty-state i {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            display: block;
+            opacity: .35
+        }
+        .empty-state p {
+            font-size: .82rem
+        }
+
+        /* ── WA NOTICE ── */
+        .wa-notice {
+            background: rgba(37, 211, 102, .07);
+            border: 1px solid rgba(37, 211, 102, .22);
+            border-radius: var(--r);
+            padding: 9px 12px;
+            font-size: .78rem;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--ink2);
+            margin: 8px 0
+        }
+        .wa-notice i {
+            color: #25D366;
+            flex-shrink: 0
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 3px
+        }
+
+        /* ── SQL BLOCK ── */
+        .sql-block {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 12px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: .68rem;
+            white-space: pre-wrap;
+            max-height: 240px;
+            overflow-y: auto;
+            color: var(--ink);
+            line-height: 1.6;
+            margin: 8px 0
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap
+        }
+        .setting-row:last-child {
+            border: none
+        }
+        .setting-row label {
+            flex: 1;
+            font-weight: 600;
+            font-size: .82rem;
+            min-width: 140px
+        }
+        .security-list {
+            background: var(--surface2);
+            border-radius: var(--r);
+            padding: 12px;
+            margin-top: 10px
+        }
+        .security-list li {
+            font-size: .78rem;
+            padding: 2px 0;
+            color: var(--muted);
+            margin-left: 15px
+        }
+
+        /* ── EXPORT GRID ── */
+        .export-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 7px
+        }
+
+        /* ── CHART CONTAINER ── */
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            max-height: 260px
+        }
+        .chart-wrap canvas {
+            width: 100% !important;
+            max-height: 260px
+        }
+
+        /* ── ANIMATIONS ── */
+        .fade-up {
+            animation: fadeUp .35s cubic-bezier(.4, 0, .2, 1)
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+        .pulse {
+            animation: pulse 2s infinite
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1)
+            }
+            50% {
+                transform: scale(1.03)
+            }
+        }
+        input[type=checkbox] {
+            accent-color: var(--forest);
+            cursor: pointer
+        }
+        details summary {
+            cursor: pointer;
+            font-weight: 700;
+            font-size: .8rem;
+            color: var(--forest);
+            padding: 7px 0;
+            user-select: none
+        }
+        details summary:hover {
+            color: var(--forest-light)
+        }
+
+        @media(max-width:768px) {
+            .topbar {
+                padding: 0 12px;
+                height: 50px
+            }
+            .logo {
+                font-size: 1rem
+            }
+            .logo-icon {
+                width: 28px;
+                height: 28px;
+                font-size: .68rem
+            }
+            .mode-btn {
+                padding: 5px 10px;
+                font-size: .7rem
+            }
+            .container {
+                padding: 14px 10px 30px
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 7px
+            }
+            .stat {
+                padding: 12px
+            }
+            .stat-num {
+                font-size: 1.4rem
+            }
+            .rooms-grid {
+                grid-template-columns: 1fr
+            }
+            .card {
+                padding: 14px
+            }
+            .tab-btn {
+                padding: 5px 10px;
+                font-size: .7rem
+            }
+            .modal {
+                padding: 16px;
+                max-width: 94vw
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-building-user"></i></div>
+                ResidentHub
+                <span class="logo-badge">v3.0</span>
+            </div>
+            <div class="conn-dot online" id="connDot">
+                <span class="dot"></span><span style="font-size:.65rem">Supabase</span>
+            </div>
+        </div>
+        <div class="mode-switcher">
+            <button class="mode-btn active" onclick="switchMode('resident')">Resident</button>
+            <button class="mode-btn" onclick="switchMode('admin')">Admin</button>
+        </div>
+        <div class="topbar-right">
+            <span class="session-pill" id="sessionPill" style="display:none"></span>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><i class="fas fa-moon" id="themeIcon"></i></button>
+        </div>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+
+    <!-- ═══════════════ RESIDENT PORTAL ═══════════════ -->
+    <div id="residentPortal" class="section active container">
+        <div class="tab-nav" id="resNav">
+            <button class="tab-btn active" data-tab="r-checkin"><i class="fas fa-right-to-bracket"></i> Check-In</button>
+            <button class="tab-btn" data-tab="r-rules"><i class="fas fa-scroll"></i> House Rules</button>
+            <button class="tab-btn" data-tab="r-maintenance"><i class="fas fa-wrench"></i> Maintenance</button>
+            <button class="tab-btn" data-tab="r-incident"><i class="fas fa-triangle-exclamation"></i> Incident</button>
+            <button class="tab-btn" data-tab="r-checkout"><i class="fas fa-door-open"></i> Check-Out</button>
+            <button class="tab-btn" data-tab="r-notices"><i class="fas fa-bullhorn"></i> Notices</button>
+            <button class="tab-btn" data-tab="r-rooms"><i class="fas fa-door-closed"></i> View Rooms</button>
+        </div>
+
+        <!-- CHECK-IN -->
+        <div id="r-checkin" class="res-tab fade-up">
+            <div class="section-head"><h2>Check-In Registration</h2><p>Register your arrival. Capacity: 13 residents across 5 rooms.</p></div>
+            <div class="card">
+                <form id="checkinForm" onsubmit="return handleCheckin(event)">
+                    <input type="text" name="__hp" style="position:absolute;left:-9999px;opacity:0;height:0" tabindex="-1" autocomplete="off">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name *</label><input id="ci_name" required minlength="2" maxlength="100" placeholder="Your full name"></div>
+                        <div class="form-group"><label>Phone Number *</label><input id="ci_phone" type="tel" required pattern="[0-9+\-\s]{7,15}" placeholder="+263 7X XXX XXXX"></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Institution / University</label><input id="ci_inst" maxlength="100" placeholder="e.g. UZ, NUST, MSU"></div>
+                        <div class="form-group"><label>National ID / Passport *</label><input id="ci_id" required maxlength="20" placeholder="ID number"></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Room *</label><select id="ci_room" required></select></div>
+                        <div class="form-group"><label>Check-In Date *</label><input id="ci_date" type="date" required></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Resident Status</label><select id="ci_status"><option value="New">New Resident</option><option value="Returning">Returning Resident</option></select></div>
+                        <div class="form-group"><label>Deposit Status</label><select id="ci_deposit"><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Partial">Partial</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Notes</label><textarea id="ci_notes" placeholder="Any special requirements..." maxlength="500"></textarea></div>
+                    <button type="submit" class="btn btn-pri"><i class="fas fa-check"></i> Submit Check-In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RULES -->
+        <div id="r-rules" class="res-tab" style="display:none">
+            <div class="section-head"><h2>House Rules &amp; Agreement</h2><p>Read carefully and sign your acceptance below.</p></div>
+            <div class="card">
+                <div class="rules-scroll" id="rulesContent"></div>
+                <form id="rulesForm" onsubmit="return handleRulesAccept(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Your Full Name *</label><input id="ra_name" required placeholder="As on your ID"></div>
+                        <div class="form-group"><label>Your Room *</label><select id="ra_room" required></select></div>
+                    </div>
+                    <div class="accept-row">
+                        <input type="checkbox" id="ra_accept" required>
+                        <label for="ra_accept">I have read, understood, and agree to abide by all the house rules. Violations may result in warnings, fines, or eviction. <strong>(Rules v2.0)</strong></label>
+                    </div>
+                    <button type="submit" class="btn btn-pri"><i class="fas fa-file-signature"></i> Sign &amp; Accept Rules</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MAINTENANCE -->
+        <div id="r-maintenance" class="res-tab" style="display:none">
+            <div class="section-head"><h2>Maintenance Request</h2><p>Report issues in your room or common areas.</p></div>
+            <div class="card">
+                <form id="maintenanceForm" onsubmit="return handleMaintenance(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Your Name *</label><input id="mt_name" required placeholder="Your full name"></div>
+                        <div class="form-group"><label>Your Room *</label><select id="mt_room" required></select></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Category *</label>
+                            <select id="mt_category" required><option value="">Select category</option>
+                                <option>Plumbing</option><option>Electrical</option><option>Furniture</option>
+                                <option>Doors/Windows</option><option>Appliances</option><option>Pest Control</option>
+                                <option>Common Area</option><option>Other</option></select></div>
+                        <div class="form-group"><label>Urgency *</label>
+                            <select id="mt_urgency" required><option value="Low">Low — Can wait</option>
+                                <option value="Medium">Medium — Within this week</option>
+                                <option value="High">High — Urgent</option>
+                                <option value="Critical">Critical — Emergency</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Describe the Issue *</label><textarea id="mt_desc" required placeholder="Please describe the problem in detail..." maxlength="1000"></textarea></div>
+                    <button type="submit" class="btn btn-pri"><i class="fas fa-paper-plane"></i> Submit Request</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- INCIDENT -->
+        <div id="r-incident" class="res-tab" style="display:none">
+            <div class="section-head"><h2>Incident Report</h2><p>Report safety, hygiene, noise, theft, or conflict incidents.</p></div>
+            <div class="card">
+                <form id="incidentForm" onsubmit="return handleIncident(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Your Name *</label><input id="in_name" required placeholder="Your full name"></div>
+                        <div class="form-group"><label>Your Room *</label><select id="in_room" required></select></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Incident Type *</label>
+                            <select id="in_type" required><option value="">Select type</option>
+                                <option>Safety</option><option>Hygiene</option><option>Noise</option>
+                                <option>Theft</option><option>Conflict</option><option>Property Damage</option><option>Other</option></select></div>
+                        <div class="form-group"><label>Urgency *</label>
+                            <select id="in_urgency" required><option value="Low">Low</option><option value="Medium">Medium</option>
+                                <option value="High">High</option><option value="Critical">Critical</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Full Description *</label><textarea id="in_desc" required placeholder="Describe the incident in full detail. Include time, location, persons involved..." maxlength="2000"></textarea></div>
+                    <div class="wa-notice"><i class="fab fa-whatsapp"></i> This report will be immediately forwarded to the admin via WhatsApp.</div>
+                    <button type="submit" class="btn btn-pri"><i class="fas fa-flag"></i> Submit &amp; Notify Admin</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- CHECKOUT -->
+        <div id="r-checkout" class="res-tab" style="display:none">
+            <div class="section-head"><h2>Check-Out Form</h2><p>Complete this form when vacating your room.</p></div>
+            <div class="card">
+                <form id="checkoutForm" onsubmit="return handleCheckout(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name *</label><input id="co_name" required placeholder="Your full name"></div>
+                        <div class="form-group"><label>Your Room *</label><select id="co_room" required></select></div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Check-Out Date *</label><input id="co_date" type="date" required></div>
+                        <div class="form-group"><label>Key Returned? *</label><select id="co_key" required><option value="Yes">Yes — Returned</option><option value="No">No — Not yet</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Room Condition Notes</label><textarea id="co_condition" placeholder="Describe the current condition..." maxlength="500"></textarea></div>
+                    <div class="form-group"><label>Forwarding Contact</label><input id="co_forward" placeholder="Phone or email for follow-up" maxlength="100"></div>
+                    <button type="submit" class="btn btn-pri"><i class="fas fa-door-open"></i> Submit Check-Out</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- NOTICES -->
+        <div id="r-notices" class="res-tab" style="display:none">
+            <div class="section-head"><h2>Notices &amp; Announcements</h2><p>Important updates from management.</p></div>
+            <div id="resNoticesList"></div>
+        </div>
+
+        <!-- VIEW ROOMS (Resident) -->
+        <div id="r-rooms" class="res-tab" style="display:none">
+            <div class="section-head"><h2>Room Availability</h2><p>Current occupancy across all rooms. Total capacity: <strong>13 beds</strong>.</p></div>
+            <div class="rooms-grid" id="resRoomsGrid"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ ADMIN PORTAL ═══════════════ -->
+    <div id="adminPortal" class="section container">
+        <!-- LOGIN -->
+        <div id="adminLogin" class="login-wrap">
+            <div class="card login-card">
+                <div class="shield"><i class="fas fa-shield-halved"></i></div>
+                <h2>Admin Access</h2>
+                <p>Sign in with your Supabase credentials</p>
+                <form onsubmit="return handleAdminLogin(event)">
+                    <div class="form-group"><label>Email</label><input type="email" id="adminEmail" required placeholder="admin@residenthub.co.zw"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="adminPassword" required placeholder="••••••••"></div>
+                    <button type="submit" class="btn btn-pri" id="loginBtn" style="width:100%;justify-content:center"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                    <div class="lockout-msg" id="lockoutMsg" style="display:none"></div>
+                    <div class="login-attempts" id="attemptCounter"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="adminDash" style="display:none">
+            <div class="card-header" style="margin-bottom:16px">
+                <div><h2 style="font-size:1.3rem">Admin Dashboard</h2><p style="color:var(--muted);font-size:.8rem">ResidentHub — Smart Hostel Management</p></div>
+                <div style="display:flex;align-items:center;gap:7px">
+                    <span class="session-pill" id="sessionTimer" style="background:var(--mint-pale);color:var(--forest);font-size:.68rem;padding:4px 10px;border-radius:20px"></span>
+                    <button class="btn btn-ghost btn-sm" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <div class="tab-nav" id="adminNav">
+                <button class="tab-btn active" data-tab="a-overview"><i class="fas fa-chart-pie"></i> Overview</button>
+                <button class="tab-btn" data-tab="a-residents"><i class="fas fa-users"></i> Residents</button>
+                <button class="tab-btn" data-tab="a-rooms"><i class="fas fa-door-closed"></i> Rooms</button>
+                <button class="tab-btn" data-tab="a-ledger"><i class="fas fa-coins"></i> Rent Ledger</button>
+                <button class="tab-btn" data-tab="a-utilities"><i class="fas fa-bolt"></i> Utilities</button>
+                <button class="tab-btn" data-tab="a-maintenance"><i class="fas fa-wrench"></i> Maintenance</button>
+                <button class="tab-btn" data-tab="a-incidents"><i class="fas fa-flag"></i> Incidents</button>
+                <button class="tab-btn" data-tab="a-notices"><i class="fas fa-bullhorn"></i> Notices</button>
+                <button class="tab-btn" data-tab="a-exports"><i class="fas fa-download"></i> Exports</button>
+                <button class="tab-btn" data-tab="a-settings"><i class="fas fa-cog"></i> Settings</button>
+            </div>
+
+            <!-- OVERVIEW -->
+            <div id="a-overview" class="adm-tab fade-up">
+                <div class="stats-row" id="statsGrid"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div class="card"><div class="card-title"><i class="fas fa-clock"></i> Recent Activity</div><div id="activityFeed" style="max-height:280px;overflow-y:auto"></div></div>
+                    <div class="card"><div class="card-title"><i class="fas fa-chart-bar"></i> Room Occupancy</div><div class="chart-wrap"><canvas id="occupancyChart"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- RESIDENTS -->
+            <div id="a-residents" class="adm-tab" style="display:none">
+                <div class="action-row">
+                    <button class="btn btn-pri btn-sm" onclick="openModal('addResidentModal')"><i class="fas fa-user-plus"></i> Add Resident</button>
+                    <span style="margin-left:auto;font-size:.76rem;color:var(--muted)" id="residentCount"></span>
+                </div>
+                <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="resSearch" placeholder="Search by name, room, status..." oninput="renderResidents()"></div>
+                <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Resident</th><th>Room</th><th>Contact</th><th>Status</th><th>Payment</th><th>Check-in</th><th>Actions</th></tr></thead><tbody id="residentsBody"></tbody></table></div>
+            </div>
+
+            <!-- ROOMS -->
+            <div id="a-rooms" class="adm-tab" style="display:none">
+                <div style="display:flex;gap:12px;margin-bottom:14px;font-size:.76rem;flex-wrap:wrap;align-items:center">
+                    <span style="display:flex;align-items:center;gap:4px"><span class="bed-indicator open" style="width:14px;height:14px;font-size:0;display:inline-flex"></span> Available</span>
+                    <span style="display:flex;align-items:center;gap:4px"><span class="bed-indicator taken" style="width:14px;height:14px;font-size:0;display:inline-flex"></span> Occupied</span>
+                    <span style="margin-left:auto;color:var(--muted)">Total: <strong>13 beds</strong> | 5 rooms</span>
+                </div>
+                <div class="rooms-grid" id="roomsGrid"></div>
+            </div>
+
+            <!-- RENT LEDGER -->
+            <div id="a-ledger" class="adm-tab" style="display:none">
+                <div class="action-row">
+                    <button class="btn btn-pri btn-sm" onclick="openModal('addPaymentModal')"><i class="fas fa-plus"></i> Record Payment</button>
+                    <div class="search-wrap" style="flex:1;max-width:300px;margin:0"><i class="fas fa-search"></i><input type="text" id="paySearch" placeholder="Search ledger..." oninput="renderLedger()"></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                    <div class="stat" style="flex:1;margin:0;padding:10px 14px;min-width:120px"><div class="stat-num" id="totalCollected" style="font-size:1.2rem">$0</div><div class="stat-lbl">Total Collected</div></div>
+                    <div class="stat amber" style="flex:1;margin:0;padding:10px 14px;min-width:120px"><div class="stat-num" id="totalOutstanding" style="font-size:1.2rem">$0</div><div class="stat-lbl">Outstanding</div></div>
+                    <div class="stat blue" style="flex:1;margin:0;padding:10px 14px;min-width:120px"><div class="stat-num" id="totalOverpaid" style="font-size:1.2rem">$0</div><div class="stat-lbl">Overpaid Credit</div></div>
+                </div>
+                <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Resident</th><th>Month</th><th>Amount</th><th>Balance</th><th>Method</th><th>Ref</th><th>Actions</th></tr></thead><tbody id="ledgerBody"></tbody></table></div>
+            </div>
+
+            <!-- UTILITIES -->
+            <div id="a-utilities" class="adm-tab" style="display:none">
+                <div class="util-tabs">
+                    <button class="util-tab active" onclick="switchUtil('power')"><i class="fas fa-bolt"></i> Electricity</button>
+                    <button class="util-tab" onclick="switchUtil('water')"><i class="fas fa-droplet"></i> Water</button>
+                </div>
+                <div id="util-power">
+                    <div class="action-row"><button class="btn btn-pri btn-sm" onclick="openModal('addPowerModal')"><i class="fas fa-plus"></i> Add Recharge</button></div>
+                    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Units (kWh)</th><th>Amount (USD)</th><th>Balance After</th><th>Notes</th></tr></thead><tbody id="powerBody"></tbody></table></div>
+                </div>
+                <div id="util-water" style="display:none">
+                    <div class="action-row"><button class="btn btn-pri btn-sm" onclick="openModal('addWaterModal')"><i class="fas fa-plus"></i> Add Delivery</button></div>
+                    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Litres</th><th>Supplier</th><th>Cost (USD)</th><th>Tank Filled</th><th>Notes</th></tr></thead><tbody id="waterBody"></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- MAINTENANCE -->
+            <div id="a-maintenance" class="adm-tab" style="display:none">
+                <div class="action-row">
+                    <div style="display:flex;gap:5px;flex-wrap:wrap">
+                        <button class="btn btn-ghost btn-sm maint-filter active" data-filter="all" onclick="filterMaintenance('all',this)">All</button>
+                        <button class="btn btn-ghost btn-sm maint-filter" data-filter="Open" onclick="filterMaintenance('Open',this)">Open</button>
+                        <button class="btn btn-ghost btn-sm maint-filter" data-filter="In Progress" onclick="filterMaintenance('In Progress',this)">In Progress</button>
+                        <button class="btn btn-ghost btn-sm maint-filter" data-filter="Resolved" onclick="filterMaintenance('Resolved',this)">Resolved</button>
+                    </div>
+                    <div class="search-wrap" style="flex:1;max-width:260px;margin:0"><i class="fas fa-search"></i><input type="text" id="maintSearch" placeholder="Search..." oninput="renderMaintenance()"></div>
+                </div>
+                <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Resident</th><th>Room</th><th>Category</th><th>Urgency</th><th>Status</th><th>Actions</th></tr></thead><tbody id="maintBody"></tbody></table></div>
+            </div>
+
+            <!-- INCIDENTS -->
+            <div id="a-incidents" class="adm-tab" style="display:none">
+                <div class="action-row">
+                    <div style="display:flex;gap:5px;flex-wrap:wrap">
+                        <button class="btn btn-ghost btn-sm inc-filter active" data-filter="all" onclick="filterIncidents('all',this)">All</button>
+                        <button class="btn btn-ghost btn-sm inc-filter" data-filter="Open" onclick="filterIncidents('Open',this)">Open</button>
+                        <button class="btn btn-ghost btn-sm inc-filter" data-filter="Closed" onclick="filterIncidents('Closed',this)">Closed</button>
+                    </div>
+                    <div class="search-wrap" style="flex:1;max-width:260px;margin:0"><i class="fas fa-search"></i><input type="text" id="incSearch" placeholder="Search..." oninput="renderIncidents()"></div>
+                </div>
+                <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Reporter</th><th>Room</th><th>Type</th><th>Urgency</th><th>Status</th><th>Actions</th></tr></thead><tbody id="incidentsBody"></tbody></table></div>
+            </div>
+
+            <!-- NOTICES -->
+            <div id="a-notices" class="adm-tab" style="display:none">
+                <div class="action-row"><button class="btn btn-pri btn-sm" onclick="openModal('addNoticeModal')"><i class="fas fa-plus"></i> Post Notice</button></div>
+                <div id="adminNoticesList"></div>
+            </div>
+
+            <!-- EXPORTS -->
+            <div id="a-exports" class="adm-tab" style="display:none">
+                <div class="card"><div class="card-title"><i class="fas fa-file-csv" style="color:#059669"></i> Export as CSV</div><div class="export-grid">
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('residents')"><i class="fas fa-users"></i> Residents</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('payments')"><i class="fas fa-coins"></i> Ledger</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('incidents')"><i class="fas fa-flag"></i> Incidents</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('maintenance')"><i class="fas fa-wrench"></i> Maintenance</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('checkins')"><i class="fas fa-right-to-bracket"></i> Check-Ins</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportCSV('checkouts')"><i class="fas fa-door-open"></i> Check-Outs</button>
+                </div></div>
+                <div class="card"><div class="card-title"><i class="fas fa-file-pdf" style="color:#DC2626"></i> Export as PDF</div><div class="export-grid">
+                        <button class="btn btn-ghost btn-sm" onclick="exportPDF('residents')"><i class="fas fa-users"></i> Residents</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportPDF('payments')"><i class="fas fa-coins"></i> Ledger</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportPDF('incidents')"><i class="fas fa-flag"></i> Incidents</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportPDF('maintenance')"><i class="fas fa-wrench"></i> Maintenance</button>
+                </div></div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="a-settings" class="adm-tab" style="display:none">
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-cog"></i> System Configuration</div>
+                    <div class="setting-row">
+                        <label>WhatsApp Admin Number</label>
+                        <input type="tel" id="settingWA" value="263771308790" style="flex:2;max-width:200px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--ink);font-size:14px">
+                        <button class="btn btn-sm btn-pri" onclick="updateWA()">Save</button>
+                    </div>
+                    <div class="setting-row">
+                        <label>Property Name</label>
+                        <input type="text" id="settingPropName" value="ResidentHub" style="flex:2;max-width:200px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--ink);font-size:14px">
+                        <button class="btn btn-sm btn-pri" onclick="updatePropName()">Save</button>
+                    </div>
+                    <div class="security-list">
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;margin-bottom:6px;color:var(--forest)"><i class="fas fa-shield-halved"></i> Active Security Features</div>
+                        <ul>
+                            <li>Brute-force protection — 5 failed attempts → 15 min lockout</li>
+                            <li>Progressive login delay — increasing wait per failed attempt</li>
+                            <li>Session timeout — auto-logout after 30 minutes inactivity</li>
+                            <li>Supabase Auth — email/password with JWT tokens</li>
+                            <li>Input sanitization — all inputs escaped against XSS</li>
+                            <li>Honeypot fields — spam protection on all public forms</li>
+                            <li>Audit trail — all actions logged with timestamps</li>
+                            <li>Row Level Security — only authenticated users access data</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-database"></i> Supabase Connection</div>
+                    <p style="font-size:.8rem;margin-bottom:10px;color:var(--muted)">Project: <strong style="color:var(--ink)">tnpblffiynemvxqtvcdt</strong></p>
+                    <button class="btn btn-ghost btn-sm" onclick="testConnection()"><i class="fas fa-wifi"></i> Test Connection</button>
+                    <button class="btn btn-ghost btn-sm" onclick="loadAll()" style="margin-left:6px"><i class="fas fa-sync-alt"></i> Reload All Data</button>
+                    <details style="margin-top:14px">
+                        <summary><i class="fas fa-code"></i> Complete Supabase Setup SQL</summary>
+                        <div class="sql-block" id="sqlBlock"></div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ MODALS ═══════════════ -->
+    <div class="modal-overlay" id="addResidentModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-user-plus" style="color:var(--forest)"></i> Add Resident</h3><button class="modal-close" onclick="closeModal('addResidentModal')">×</button></div>
+            <form onsubmit="return addResidentManual(event)">
+                <div class="form-grid"><div class="form-group"><label>Full Name *</label><input id="ar_name" required placeholder="Full name"></div><div class="form-group"><label>Phone *</label><input id="ar_phone" type="tel" required placeholder="+263 7X XXX XXXX"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Institution</label><input id="ar_inst" placeholder="e.g. NUST"></div><div class="form-group"><label>ID Number *</label><input id="ar_id" required placeholder="National ID"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Room *</label><select id="ar_room" required></select></div><div class="form-group"><label>Status</label><select id="ar_status"><option>New</option><option>Returning</option></select></div></div>
+                <div class="form-group"><label>Payment Status</label><select id="ar_payment"><option value="Pending">Pending</option><option value="Paid">Paid</option><option value="Partial">Partial</option></select></div>
+                <button type="submit" class="btn btn-pri" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Save Resident</button>
+            </form>
+    </div></div>
+
+    <div class="modal-overlay" id="addPaymentModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-coins" style="color:var(--forest)"></i> Record Rent Payment</h3><button class="modal-close" onclick="closeModal('addPaymentModal')">×</button></div>
+            <form onsubmit="return addPayment(event)">
+                <div class="form-grid"><div class="form-group"><label>Resident Name *</label><input id="pm_name" required placeholder="Full name" list="residentList"><datalist id="residentList"></datalist></div><div class="form-group"><label>Month *</label><input type="month" id="pm_month" required></div></div>
+                <div class="form-grid"><div class="form-group"><label>Amount Paid (USD) *</label><input type="number" id="pm_amount" step="0.01" required placeholder="0.00" min="0"></div><div class="form-group"><label>Outstanding Balance After</label><input type="number" id="pm_balance" step="0.01" value="0" placeholder="0.00"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Payment Method *</label><select id="pm_method" required><option>Cash</option><option>EcoCash</option><option>Bank Transfer</option><option>InnBucks</option><option>Other</option></select></div><div class="form-group"><label>Reference</label><input id="pm_ref" placeholder="Transaction ref"></div></div>
+                <div class="form-group"><label>Notes</label><textarea id="pm_notes" rows="2" placeholder="Any payment notes..."></textarea></div>
+                <button type="submit" class="btn btn-pri" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Save Payment</button>
+            </form>
+    </div></div>
+
+    <div class="modal-overlay" id="addPowerModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-bolt" style="color:var(--gold)"></i> Electricity Recharge</h3><button class="modal-close" onclick="closeModal('addPowerModal')">×</button></div>
+            <form onsubmit="return addPower(event)">
+                <div class="form-grid"><div class="form-group"><label>Date *</label><input type="date" id="pw_date" required></div><div class="form-group"><label>Units Purchased *</label><input type="number" id="pw_units" step="0.1" required placeholder="kWh" min="0"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Amount Paid (USD) *</label><input type="number" id="pw_amount" step="0.01" required placeholder="0.00" min="0"></div><div class="form-group"><label>Balance Units After</label><input type="number" id="pw_balance" step="0.1" placeholder="Remaining kWh"></div></div>
+                <div class="form-group"><label>Notes</label><textarea id="pw_notes" rows="2" placeholder="Supplier, token number..."></textarea></div>
+                <button type="submit" class="btn btn-pri" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Save</button>
+            </form>
+    </div></div>
+
+    <div class="modal-overlay" id="addWaterModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-droplet" style="color:var(--blue)"></i> Water Delivery</h3><button class="modal-close" onclick="closeModal('addWaterModal')">×</button></div>
+            <form onsubmit="return addWater(event)">
+                <div class="form-grid"><div class="form-group"><label>Date *</label><input type="date" id="wt_date" required></div><div class="form-group"><label>Litres *</label><input type="number" id="wt_litres" required placeholder="Litres" min="0"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Supplier</label><input id="wt_supplier" placeholder="Supplier name"></div><div class="form-group"><label>Cost (USD) *</label><input type="number" id="wt_cost" step="0.01" required placeholder="0.00" min="0"></div></div>
+                <div class="form-grid"><div class="form-group"><label>Tank Filled?</label><select id="wt_filled"><option>Yes</option><option>No</option><option>Partial</option></select></div><div class="form-group"><label>Notes</label><input id="wt_notes" placeholder="Any notes"></div></div>
+                <button type="submit" class="btn btn-pri" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Save</button>
+            </form>
+    </div></div>
+
+    <div class="modal-overlay" id="addNoticeModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-bullhorn" style="color:var(--forest)"></i> Post Notice</h3><button class="modal-close" onclick="closeModal('addNoticeModal')">×</button></div>
+            <form onsubmit="return addNotice(event)">
+                <div class="form-group"><label>Title *</label><input id="nt_title" required placeholder="Notice subject"></div>
+                <div class="form-group"><label>Content *</label><textarea id="nt_content" rows="4" required placeholder="Full notice text..."></textarea></div>
+                <div class="form-group"><label>Priority</label><select id="nt_priority"><option value="Normal">Normal</option><option value="Important">Important</option><option value="Urgent">Urgent</option></select></div>
+                <button type="submit" class="btn btn-pri" style="width:100%;justify-content:center"><i class="fas fa-paper-plane"></i> Publish Notice</button>
+            </form>
+    </div></div>
+
+    <div class="modal-overlay" id="viewIncidentModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-flag" style="color:var(--red)"></i> Incident Details</h3><button class="modal-close" onclick="closeModal('viewIncidentModal')">×</button></div>
+            <div id="incidentDetail"></div>
+    </div></div>
+
+    <div class="modal-overlay" id="viewMaintModal"><div class="modal">
+            <div class="modal-head"><h3><i class="fas fa-wrench" style="color:var(--amber)"></i> Maintenance Details</h3><button class="modal-close" onclick="closeModal('viewMaintModal')">×</button></div>
+            <div id="maintDetail"></div>
+    </div></div>
+
+    <div class="modal-overlay" id="confirmModal"><div class="modal" style="max-width:380px;text-align:center">
+            <div class="modal-head"><span id="confirmTitle" style="font-weight:700"></span><button class="modal-close" onclick="closeModal('confirmModal')">×</button></div>
+            <p id="confirmMsg" style="color:var(--muted);margin-bottom:18px;font-size:.86rem"></p>
+            <div style="display:flex;gap:7px;justify-content:center"><button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button><button class="btn btn-red" id="confirmBtn">Confirm</button></div>
+    </div></div>
+
+    <script>
+        /* ═══════════════ SUPABASE CONFIG ═══════════════ */
+        const SB_URL = 'https://tnpblffiynemvxqtvcdt.supabase.co';
+        const SB_KEY = 'sb_publishable_BIorRCqR4k7ShPs5MG4nfA_ntLbl5kU';
+        let sb = null;
+        try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.warn('Supabase init failed', e); }
+
+        /* ═══════════════ THEME ═══════════════ */
+        let darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        function applyTheme() {
+            document.documentElement.classList.toggle('dark', darkMode);
+            document.getElementById('themeIcon').className = darkMode ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        applyTheme();
+
+        function toggleTheme() { darkMode = !darkMode;
+            applyTheme(); }
+
+        /* ═══════════════ ROOMS CONFIG ═══════════════ */
+        const ROOMS = [
+            { id: 'blue-white', name: 'Blue-White', cap: 3, css: 'rm-blue', color: '#3B82F6' },
+            { id: 'black-gold', name: 'Black-Gold', cap: 3, css: 'rm-gold', color: '#D97706' },
+            { id: 'ensuite', name: 'Ensuite', cap: 3, css: 'rm-purple', color: '#7C3AED' },
+            { id: 'crystal-1', name: 'Crystal 1', cap: 2, css: 'rm-teal', color: '#0D9488' },
+            { id: 'crystal-2', name: 'Crystal 2', cap: 2, css: 'rm-rose', color: '#E11D48' }
+        ];
+        const TOTAL_CAP = 13;
+        let ADMIN_WA = '263771308790';
+
+        /* ═══════════════ DB STATE ═══════════════ */
+        const DB = {
+            residents: [],
+            checkins: [],
+            checkouts: [],
+            rules: [],
+            payments: [],
+            incidents: [],
+            maintenance: [],
+            power: [],
+            water: [],
+            notices: [
+                { id: 'n1', title: 'Welcome to the New Semester',
+                    content: 'Welcome back! Please complete your check-in and rules acceptance within 48 hours of arrival.',
+                    priority: 'Important', createdAt: '2025-01-15T08:00:00' },
+                { id: 'n2', title: 'Water Schedule Update',
+                    content: 'Water deliveries are on Tuesdays and Fridays. Report any leaks immediately to reception.',
+                    priority: 'Normal', createdAt: '2025-01-20T10:30:00' }
+            ],
+            activity: []
+        };
+        const ids = { r: 200, p: 300, i: 400, m: 500, pw: 600, wt: 700, n: 800, ci: 900, co: 1000, ru: 1100 };
+
+        function nextId(k) { return k.toUpperCase() + (++ids[k]); }
+        let adminLoggedIn = false;
+        let sessionTO = null,
+            sessionStart = 0;
+        const SESSION_DUR = 30 * 60 * 1000;
+        let loginAttempts = 0,
+            lockoutUntil = 0;
+        let maintFilter = 'all',
+            incFilter = 'all';
+        let occupancyChartInstance = null;
+
+        /* ═══════════════ HELPERS ═══════════════ */
+        function now() { return new Date().toISOString(); }
+
+        function fmtDate(s) { if (!s) return '-'; return new Date(s).toLocaleDateString('en-GB', { day: '2-digit',
+                month: 'short', year: 'numeric' }); }
+
+        function fmtDT(s) { if (!s) return '-'; return new Date(s).toLocaleDateString('en-GB', { day: '2-digit',
+                month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
+        function esc(s) { const d = document.createElement('div');
+            d.textContent = s || ''; return d.innerHTML; }
+
+        function roomName(id) { const r = ROOMS.find(x => x.id === id); return r ? r.name : id || '-'; }
+
+        function roomById(id) { return ROOMS.find(x => x.id === id); }
+
+        function initials(n) { return (n || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
+
+        function addActivity(msg) { DB.activity.unshift({ msg, time: now() }); if (DB.activity.length > 60) DB.activity
+                .pop(); }
+
+        /* ═══════════════ TOAST ═══════════════ */
+        function toast(msg, type = 'success') {
+            const icons = { success: 'fa-check-circle', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info' };
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.innerHTML = '<i class="fas ' + icons[type] + '"></i>' + esc(msg);
+            document.getElementById('toasts').appendChild(t);
+            setTimeout(() => { t.style.opacity = '0';
+                t.style.transform = 'translateX(20px)';
+                setTimeout(() => t.remove(), 200); }, 3400);
+        }
+
+        /* ═══════════════ MODALS ═══════════════ */
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function showConfirm(title, msg, cb) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMsg').textContent = msg;
+            const btn = document.getElementById('confirmBtn');
+            const nb = btn.cloneNode(true);
+            btn.parentNode.replaceChild(nb, btn);
+            nb.id = 'confirmBtn';
+            nb.addEventListener('click', () => { closeModal('confirmModal');
+                cb(); });
+            openModal('confirmModal');
+        }
+        document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', function(e) { if (e
+                    .target === m) m.classList.remove('open'); }); });
+
+        /* ═══════════════ NAVIGATION ═══════════════ */
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach((b, i) => { b.classList.toggle('active', (mode ===
+                    'resident' && i === 0) || (mode === 'admin' && i === 1)); });
+            document.getElementById('residentPortal').classList.toggle('active', mode === 'resident');
+            document.getElementById('adminPortal').classList.toggle('active', mode === 'admin');
+        }
+
+        function setupTabNav(navId, tabClass) {
+            document.getElementById(navId).addEventListener('click', function(e) {
+                const btn = e.target.closest('.tab-btn');
+                if (!btn) return;
+                document.querySelectorAll('#' + navId + ' .tab-btn').forEach(b => b.classList.remove(
+                'active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.' + tabClass).forEach(t => t.style.display = 'none');
+                const target = document.getElementById(btn.dataset.tab);
+                if (target) target.style.display = 'block';
+                if (tabClass === 'adm-tab') onAdminTab(btn.dataset.tab);
+            });
+        }
+        setupTabNav('resNav', 'res-tab');
+
+        /* ═══════════════ ROOM SELECTS ═══════════════ */
+        function roomOptions() {
+            let h = '<option value="">Select room</option>';
+            ROOMS.forEach(r => {
+                const occ = DB.residents.filter(x => x.room === r.id).length;
+                const avail = r.cap - occ;
+                h += '<option value="' + r.id + '"' + (avail <= 0 ? ' disabled' : '') + '>' + r.name + ' (' +
+                    avail + ' bed' + (avail !== 1 ? 's' : '') + ' available)</option>';
+            });
+            return h;
+        }
+
+        function refreshRoomSelects() {
+            ['ci_room', 'ra_room', 'mt_room', 'in_room', 'co_room', 'ar_room'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = roomOptions();
+            });
+        }
+        refreshRoomSelects();
+
+        /* ═══════════════ WHATSAPP ═══════════════ */
+        function sendWA(incident) {
+            const msg =
+                '*INCIDENT REPORT — ResidentHub*\n\nType: ' + incident.type + '\nUrgency: ' + incident.urgency +
+                '\nRoom: ' + roomName(incident.room) + '\nReported by: ' + incident.submittedBy + '\nDate: ' + fmtDT(
+                    incident.createdAt) + '\n\n*Description:*\n' + incident.description;
+            window.open('https://wa.me/' + ADMIN_WA + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+
+        /* ═══════════════ SUPABASE I/O ═══════════════ */
+        async function sbInsert(tbl, row) { if (!sb) return; try { await sb.from(tbl).insert(row); } catch (e) { console.warn(
+                e); } }
+        async function sbUpdate(tbl, id, upd) { if (!sb) return; try { await sb.from(tbl).update(upd).eq('id', id); } catch (
+            e) { console.warn(e); } }
+        async function sbDelete(tbl, id) { if (!sb) return; try { await sb.from(tbl).delete().eq('id', id); } catch (e) { console
+                .warn(e); } }
+
+        function mapRow(key, r) {
+            const mappers = {
+                residents: () => ({ id: r.id, name: r.name, phone: r.phone, institution: r.institution, idNumber: r
+                        .id_number, room: r.room, status: r.status, checkinDate: r.checkin_date,
+                    paymentStatus: r.payment_status, notes: r.notes, createdAt: r.created_at }),
+                checkins: () => ({ id: r.id, name: r.name, phone: r.phone, institution: r.institution, idNumber: r
+                        .id_number, room: r.room, date: r.date, status: r.status, deposit: r.deposit, notes: r
+                        .notes, createdAt: r.created_at }),
+                checkouts: () => ({ id: r.id, name: r.name, room: r.room, date: r.date, keyReturned: r.key_returned,
+                    condition: r.condition_notes, forwardContact: r.forward_contact, createdAt: r.created_at }),
+                payments: () => ({ id: r.id, name: r.name, month: r.month, amount: r.amount, balance: r.balance,
+                    method: r.method, ref: r.ref, notes: r.notes, paidDate: r.paid_date, recordedBy: r
+                    .recorded_by }),
+                incidents: () => ({ id: r.id, submittedBy: r.submitted_by, room: r.room, type: r.type, urgency: r
+                        .urgency, description: r.description, status: r.status, adminNotes: r.admin_notes,
+                    createdAt: r.created_at, closedAt: r.closed_at }),
+                maintenance: () => ({ id: r.id, name: r.name, room: r.room, category: r.category, urgency: r.urgency,
+                    description: r.description, status: r.status, assignedTo: r.assigned_to, adminNotes: r
+                    .admin_notes, createdAt: r.created_at, resolvedAt: r.resolved_at }),
+                power: () => ({ id: r.id, date: r.date, units: r.units, amount: r.amount, balance: r.balance,
+                    notes: r.notes }),
+                water: () => ({ id: r.id, date: r.date, litres: r.litres, supplier: r.supplier, cost: r.cost,
+                    filled: r.filled, notes: r.notes }),
+                notices: () => ({ id: r.id, title: r.title, content: r.content, priority: r.priority, createdAt: r
+                        .created_at })
+            };
+            return mappers[key] ? mappers[key]() : r;
+        }
+
+        async function loadAll() {
+            if (!sb) { toast('Supabase not connected', 'warning'); return; }
+            const tables = [
+                { k: 'residents', t: 'residents' }, { k: 'checkins', t: 'checkins' }, { k: 'checkouts', t: 'checkouts' },
+                { k: 'payments', t: 'payments' }, { k: 'incidents', t: 'incidents' }, { k: 'maintenance',
+                    t: 'maintenance' },
+                { k: 'power', t: 'power_utilities' }, { k: 'water', t: 'water_utilities' }, { k: 'notices', t: 'notices' }
+            ];
+            try {
+                for (const tbl of tables) {
+                    const resp = await sb.from(tbl.t).select('*').order('created_at', { ascending: false });
+                    if (resp.data) DB[tbl.k] = resp.data.map(r => mapRow(tbl.k, r));
+                }
+                document.getElementById('connDot').className = 'conn-dot online';
+                renderAll();
+                if (adminLoggedIn) onAdminTab('a-overview');
+                toast('Data loaded from Supabase', 'info');
+            } catch (e) {
+                document.getElementById('connDot').className = 'conn-dot offline';
+                toast('Load failed: ' + e.message, 'error');
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const r = await sb.from('residents').select('count', { count: 'exact', head: true });
+                if (r.error) throw r.error;
+                toast('Connection OK! Supabase is online.', 'success');
+            } catch (e) { toast('Failed: ' + e.message, 'error'); }
+        }
+
+        function renderAll() {
+            renderResNotices();
+            renderAdminNotices();
+            renderResRoomsGrid();
+            refreshRoomSelects();
+            if (adminLoggedIn) {
+                renderOverview();
+                renderResidents();
+                renderRooms();
+                renderLedger();
+                renderPower();
+                renderWater();
+                renderMaintenance();
+                renderIncidents();
+            }
+        }
+
+        /* ═══════════════ RESIDENT FORMS ═══════════════ */
+        function handleCheckin(e) {
+            e.preventDefault();
+            if (e.target.querySelector('[name="__hp"]')?.value) return false;
+            const roomId = document.getElementById('ci_room').value;
+            const occ = DB.residents.filter(r => r.room === roomId).length;
+            const cfg = roomById(roomId);
+            if (cfg && occ >= cfg.cap) { toast(cfg.name + ' is full!', 'error'); return false; }
+            const data = {
+                id: nextId('ci'),
+                name: document.getElementById('ci_name').value.trim(),
+                phone: document.getElementById('ci_phone').value.trim(),
+                institution: document.getElementById('ci_inst').value.trim(),
+                idNumber: document.getElementById('ci_id').value.trim(),
+                room: roomId,
+                date: document.getElementById('ci_date').value,
+                status: document.getElementById('ci_status').value,
+                deposit: document.getElementById('ci_deposit').value,
+                notes: document.getElementById('ci_notes').value.trim(),
+                createdAt: now()
+            };
+            DB.checkins.push(data);
+            sbInsert('checkins', { id: data.id, name: data.name, phone: data.phone, institution: data.institution,
+                id_number: data.idNumber, room: data.room, date: data.date, status: data.status, deposit: data.deposit,
+                notes: data.notes, created_at: data.createdAt });
+            const existing = DB.residents.find(r => r.idNumber === data.idNumber);
+            if (!existing) {
+                const res = {
+                    id: nextId('r'),
+                    name: data.name,
+                    phone: data.phone,
+                    institution: data.institution,
+                    idNumber: data.idNumber,
+                    room: data.room,
+                    status: data.status,
+                    checkinDate: data.date,
+                    paymentStatus: data.deposit,
+                    notes: data.notes,
+                    createdAt: now()
+                };
+                DB.residents.push(res);
+                sbInsert('residents', { id: res.id, name: res.name, phone: res.phone, institution: res.institution,
+                    id_number: res.idNumber, room: res.room, status: res.status, checkin_date: res.checkinDate,
+                    payment_status: res.paymentStatus, notes: res.notes, created_at: res.createdAt });
+            } else {
+                existing.room = data.room;
+                existing.phone = data.phone;
+                existing.checkinDate = data.date;
+                existing.paymentStatus = data.deposit;
+                sbUpdate('residents', existing.id, { room: data.room, phone: data.phone, checkin_date: data.date,
+                    payment_status: data.deposit });
+            }
+            addActivity('Check-in: ' + data.name + ' → ' + roomName(data.room));
+            toast('Check-in submitted! Welcome ' + data.name + '!');
+            e.target.reset();
+            document.getElementById('ci_date').value = new Date().toISOString().split('T')[0];
+            refreshRoomSelects();
+            renderResRoomsGrid();
+            return false;
+        }
+
+        function handleRulesAccept(e) {
+            e.preventDefault();
+            const data = { id: nextId('ru'), name: document.getElementById('ra_name').value.trim(), room: document
+                    .getElementById('ra_room').value, accepted: true, acceptedAt: now(), version: 'Rules v2.0' };
+            DB.rules.push(data);
+            sbInsert('rules_acceptance', { id: data.id, name: data.name, room: data.room, accepted: true, accepted_at: data
+                    .acceptedAt, version: data.version });
+            addActivity('Rules accepted: ' + data.name);
+            toast('Rules accepted. Thank you, ' + data.name + '!');
+            e.target.reset();
+            return false;
+        }
+
+        function handleMaintenance(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('m'),
+                name: document.getElementById('mt_name').value.trim(),
+                room: document.getElementById('mt_room').value,
+                category: document.getElementById('mt_category').value,
+                urgency: document.getElementById('mt_urgency').value,
+                description: document.getElementById('mt_desc').value.trim(),
+                status: 'Open',
+                adminNotes: '',
+                createdAt: now(),
+                resolvedAt: null
+            };
+            DB.maintenance.push(data);
+            sbInsert('maintenance', { id: data.id, name: data.name, room: data.room, category: data.category, urgency: data
+                    .urgency, description: data.description, status: 'Open', admin_notes: '', created_at: data.createdAt,
+                resolved_at: null });
+            addActivity('Maintenance: ' + data.name + ' — ' + data.category);
+            toast('Maintenance request submitted!');
+            e.target.reset();
+            return false;
+        }
+
+        function handleIncident(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('i'),
+                submittedBy: document.getElementById('in_name').value.trim(),
+                room: document.getElementById('in_room').value,
+                type: document.getElementById('in_type').value,
+                urgency: document.getElementById('in_urgency').value,
+                description: document.getElementById('in_desc').value.trim(),
+                status: 'Open',
+                adminNotes: '',
+                createdAt: now(),
+                closedAt: null
+            };
+            DB.incidents.push(data);
+            sbInsert('incidents', { id: data.id, submitted_by: data.submittedBy, room: data.room, type: data.type,
+                urgency: data.urgency, description: data.description, status: 'Open', admin_notes: '',
+                created_at: data.createdAt, closed_at: null });
+            addActivity('Incident by ' + data.submittedBy + ': ' + data.type);
+            toast('Incident submitted! Opening WhatsApp...', 'info');
+            sendWA(data);
+            e.target.reset();
+            return false;
+        }
+
+        function handleCheckout(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('co'),
+                name: document.getElementById('co_name').value.trim(),
+                room: document.getElementById('co_room').value,
+                date: document.getElementById('co_date').value,
+                keyReturned: document.getElementById('co_key').value,
+                condition: document.getElementById('co_condition').value.trim(),
+                forwardContact: document.getElementById('co_forward').value.trim(),
+                createdAt: now()
+            };
+            DB.checkouts.push(data);
+            sbInsert('checkouts', { id: data.id, name: data.name, room: data.room, date: data.date, key_returned: data
+                    .keyReturned, condition_notes: data.condition, forward_contact: data.forwardContact,
+                created_at: data.createdAt });
+            const res = DB.residents.find(r => r.room === data.room && r.name.toLowerCase() === data.name
+            .toLowerCase());
+            if (res) { res.room = '';
+                sbUpdate('residents', res.id, { room: '' }); }
+            addActivity('Check-out: ' + data.name + ' from ' + roomName(data.room));
+            toast('Check-out completed. Safe travels, ' + data.name + '!');
+            e.target.reset();
+            refreshRoomSelects();
+            renderResRoomsGrid();
+            return false;
+        }
+
+        /* ═══════════════ ADMIN AUTH ═══════════════ */
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const nowMs = Date.now();
+            if (nowMs < lockoutUntil) {
+                const s = Math.ceil((lockoutUntil - nowMs) / 1000);
+                document.getElementById('lockoutMsg').style.display = 'block';
+                document.getElementById('lockoutMsg').textContent = 'Locked out. Try again in ' + s + 's.';
+                return false;
+            }
+            const email = document.getElementById('adminEmail').value.trim();
+            const pass = document.getElementById('adminPassword').value;
+            try {
+                if (!sb) throw new Error('Supabase not connected');
+                const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+                if (error) throw error;
+                adminLoggedIn = true;
+                loginAttempts = 0;
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminDash').style.display = 'block';
+                document.getElementById('lockoutMsg').style.display = 'none';
+                document.getElementById('attemptCounter').textContent = '';
+                setupTabNav('adminNav', 'adm-tab');
+                startSession();
+                await loadAll();
+                addActivity('Admin logged in');
+                toast('Welcome back, Admin!');
+                sb.auth.onAuthStateChange(function(event) { if (event === 'SIGNED_OUT') adminLogout(true); });
+            } catch (err) {
+                loginAttempts++;
+                const rem = 5 - loginAttempts;
+                if (loginAttempts >= 5) {
+                    lockoutUntil = nowMs + 15 * 60 * 1000;
+                    document.getElementById('lockoutMsg').style.display = 'block';
+                    document.getElementById('lockoutMsg').textContent =
+                        'Too many failed attempts. Locked for 15 minutes.';
+                    document.getElementById('attemptCounter').textContent = '';
+                    loginAttempts = 0;
+                } else {
+                    document.getElementById('attemptCounter').textContent = rem + ' attempt' + (rem !== 1 ? 's' :
+                        '') + ' remaining';
+                    document.getElementById('loginBtn').disabled = true;
+                    setTimeout(() => { document.getElementById('loginBtn').disabled = false; }, Math.pow(2,
+                        loginAttempts) * 600);
+                }
+                toast('Login failed: ' + (err.message || 'Invalid credentials'), 'error');
+            }
+            document.getElementById('adminPassword').value = '';
+            return false;
+        }
+
+        function startSession() {
+            sessionStart = Date.now();
+            resetSession();
+            updateTimer();
+            document.getElementById('sessionPill').style.display = 'block';
+        }
+
+        function resetSession() {
+            clearTimeout(sessionTO);
+            sessionStart = Date.now();
+            sessionTO = setTimeout(() => { adminLogout();
+                toast('Session expired', 'warning'); }, SESSION_DUR);
+        }
+
+        function updateTimer() {
+            if (!adminLoggedIn) return;
+            const rem = Math.max(0, SESSION_DUR - (Date.now() - sessionStart));
+            const m = Math.floor(rem / 60000),
+                s = Math.floor((rem % 60000) / 1000);
+            const el = document.getElementById('sessionTimer');
+            if (el) el.textContent = m + 'm ' + s + 's remaining';
+            requestAnimationFrame(updateTimer);
+        }
+        document.addEventListener('click', () => { if (adminLoggedIn) resetSession(); });
+        document.addEventListener('keydown', () => { if (adminLoggedIn) resetSession(); });
+
+        async function adminLogout(silent) {
+            if (!silent && sb) await sb.auth.signOut();
+            adminLoggedIn = false;
+            clearTimeout(sessionTO);
+            document.getElementById('adminLogin').style.display = '';
+            document.getElementById('adminDash').style.display = 'none';
+            document.getElementById('sessionPill').style.display = 'none';
+            if (occupancyChartInstance) { occupancyChartInstance.destroy();
+                occupancyChartInstance = null; }
+            addActivity('Admin logged out');
+            toast('Logged out');
+        }
+
+        /* ═══════════════ ADMIN RENDER ═══════════════ */
+        function onAdminTab(tab) {
+            const renderers = {
+                'a-overview': renderOverview,
+                'a-residents': renderResidents,
+                'a-rooms': renderRooms,
+                'a-ledger': renderLedger,
+                'a-utilities': () => { renderPower();
+                    renderWater(); },
+                'a-maintenance': renderMaintenance,
+                'a-incidents': renderIncidents,
+                'a-notices': renderAdminNotices
+            };
+            if (renderers[tab]) renderers[tab]();
+        }
+
+        function renderOverview() {
+            const active = DB.residents.filter(r => r.room).length;
+            const openInc = DB.incidents.filter(i => i.status === 'Open').length;
+            const openMaint = DB.maintenance.filter(m => m.status === 'Open').length;
+            const inProgressMaint = DB.maintenance.filter(m => m.status === 'In Progress').length;
+            const totalPaid = DB.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const totalBal = DB.payments.reduce((s, p) => s + Number(p.balance || 0), 0);
+            document.getElementById('statsGrid').innerHTML = [
+                { n: DB.residents.length, l: 'Total Residents', cls: '' },
+                { n: active + '/' + TOTAL_CAP, l: 'Beds Occupied', cls: 'blue' },
+                { n: openInc, l: 'Open Incidents', cls: 'red' },
+                { n: openMaint + inProgressMaint, l: 'Pending Maintenance', cls: 'amber' },
+                { n: '$' + totalPaid.toFixed(2), l: 'Total Collected', cls: 'gold' },
+                { n: '$' + totalBal.toFixed(2), l: 'Outstanding Balance', cls: 'purple' }
+            ].map(s =>
+                '<div class="stat ' + s.cls + '"><div class="stat-num">' + s.n +
+                '</div><div class="stat-lbl">' + s.l + '</div></div>'
+            ).join('');
+            const feed = DB.activity.slice(0, 14);
+            document.getElementById('activityFeed').innerHTML = feed.length ? feed.map(a =>
+                '<div class="activity-item"><div class="activity-dot"></div><div class="activity-text">' + esc(a.msg) +
+                '</div><div class="activity-time">' + fmtDT(a.time) + '</div></div>'
+            ).join('') : '<div class="empty-state"><i class="fas fa-clock"></i><p>No activity yet</p></div>';
+            renderOccupancyChart();
+        }
+
+        function renderOccupancyChart() {
+            const ctx = document.getElementById('occupancyChart');
+            if (!ctx) return;
+            if (occupancyChartInstance) occupancyChartInstance.destroy();
+            const occ = ROOMS.map(r => ({
+                name: r.name,
+                occ: DB.residents.filter(x => x.room === r.id).length,
+                cap: r.cap,
+                color: r.color
+            }));
+            occupancyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: occ.map(r => r.name),
+                    datasets: [
+                        { label: 'Occupied', data: occ.map(r => r.occ), backgroundColor: occ.map(r => r.color),
+                            borderRadius: 8, borderSkipped: false },
+                        { label: 'Available', data: occ.map(r => r.cap - r.occ), backgroundColor: 'rgba(180,200,190,0.4)',
+                            borderRadius: 8, borderSkipped: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true,
+                                padding: 20 } } },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, max: 3, ticks: { stepSize: 1 }, grid: { color: 'rgba(180,200,190,0.2)' } }
+                    }
+                }
+            });
+        }
+
+        function renderResidents() {
+            const q = (document.getElementById('resSearch')?.value || '').toLowerCase();
+            const list = DB.residents.filter(r => !q || r.name.toLowerCase().includes(q) || roomName(r.room).toLowerCase()
+                .includes(q) || (r.status || '').toLowerCase().includes(q));
+            document.getElementById('residentCount').textContent = list.length + ' resident' + (list.length !== 1 ? 's' :
+                '');
+            document.getElementById('residentsBody').innerHTML = list.length ? list.map(r => {
+                const pb = r.paymentStatus === 'Paid' ? 'badge-green' : r.paymentStatus === 'Pending' ?
+                    'badge-red' : 'badge-amber';
+                const sb2 = r.status === 'New' ? 'badge-blue' : 'badge-ghost';
+                return '<tr><td><div class="name-cell">' + esc(r.name) + '</div><div class="sub">' + esc(r
+                    .institution || '—') + '</div></td><td>' + (r.room ? roomName(r.room) : '-') +
+                    '</td><td>' + esc(r.phone || '—') + '</td><td><span class="badge ' + sb2 + '">' + esc(r
+                        .status) + '</span></td><td><span class="badge ' + pb + '">' + esc(r.paymentStatus ||
+                        '-') + '</span></td><td>' + fmtDate(r.checkinDate) +
+                    '</td><td><button class="btn btn-red btn-sm" onclick="removeResident(\'' + r.id +
+                    '\')"><i class="fas fa-trash"></i></button></td></tr>';
+            }).join('') :
+                '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No residents found</p></div></td></tr>';
+        }
+
+        function removeResident(id) {
+            showConfirm('Remove Resident', 'Remove this resident from the system? This cannot be undone.', () => {
+                DB.residents = DB.residents.filter(r => r.id !== id);
+                sbDelete('residents', id);
+                addActivity('Resident removed');
+                renderResidents();
+                refreshRoomSelects();
+                renderResRoomsGrid();
+                toast('Resident removed');
+            });
+        }
+
+        function addResidentManual(e) {
+            e.preventDefault();
+            const roomId = document.getElementById('ar_room').value;
+            const occ = DB.residents.filter(r => r.room === roomId).length;
+            const cfg = roomById(roomId);
+            if (cfg && occ >= cfg.cap) { toast(cfg.name + ' is full!', 'error'); return false; }
+            const data = {
+                id: nextId('r'),
+                name: document.getElementById('ar_name').value.trim(),
+                phone: document.getElementById('ar_phone').value.trim(),
+                institution: document.getElementById('ar_inst').value.trim(),
+                idNumber: document.getElementById('ar_id').value.trim(),
+                room: roomId,
+                status: document.getElementById('ar_status').value,
+                checkinDate: new Date().toISOString().split('T')[0],
+                paymentStatus: document.getElementById('ar_payment').value,
+                notes: '',
+                createdAt: now()
+            };
+            DB.residents.push(data);
+            sbInsert('residents', { id: data.id, name: data.name, phone: data.phone, institution: data.institution,
+                id_number: data.idNumber, room: data.room, status: data.status, checkin_date: data.checkinDate,
+                payment_status: data.paymentStatus, notes: '', created_at: data.createdAt });
+            addActivity('Resident added: ' + data.name);
+            closeModal('addResidentModal');
+            renderResidents();
+            refreshRoomSelects();
+            renderResRoomsGrid();
+            toast('Resident added!');
+            e.target.reset();
+            return false;
+        }
+
+        function renderRooms() {
+            document.getElementById('roomsGrid').innerHTML = ROOMS.map(room => {
+                const occupants = DB.residents.filter(r => r.room === room.id);
+                const pct = Math.round(occupants.length / room.cap * 100);
+                const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'low';
+                let beds = '';
+                for (let i = 0; i < room.cap; i++) {
+                    const occ = occupants[i];
+                    beds += '<div class="bed-indicator ' + (occ ? 'taken' : 'open') + '" title="' + (occ ? esc(occ
+                        .name) : 'Available') + '"><i class="fas fa-' + (occ ? 'user' : 'plus') +
+                        '"></i></div>';
+                }
+                const list = occupants.length ? occupants.map(o =>
+                    '<div class="occ-item"><div class="occ-avatar">' + initials(o.name) + '</div>' + esc(o.name) +
+                    '</div>'
+                ).join('') :
+                    '<div style="color:var(--forest-light);font-size:.74rem;padding:3px 0"><i class="fas fa-check" style="margin-right:4px"></i>All beds available</div>';
+                return '<div class="room-card ' + room.css + '"><div class="accent"></div><div class="room-name">' +
+                    esc(room.name) + '</div><div class="room-meta">' + occupants.length + ' / ' + room.cap +
+                    ' beds occupied</div><div class="room-capacity-bar"><div class="room-capacity-fill ' + fillClass +
+                    '" style="width:' + pct + '%"></div></div><div class="beds-row">' + beds +
+                    '</div><div class="room-occupants">' + list + '</div></div>';
+            }).join('');
+        }
+
+        function renderResRoomsGrid() {
+            const grid = document.getElementById('resRoomsGrid');
+            if (!grid) return;
+            grid.innerHTML = ROOMS.map(room => {
+                const occupants = DB.residents.filter(r => r.room === room.id);
+                const pct = Math.round(occupants.length / room.cap * 100);
+                const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'low';
+                let beds = '';
+                for (let i = 0; i < room.cap; i++) {
+                    const occ = occupants[i];
+                    beds += '<div class="bed-indicator ' + (occ ? 'taken' : 'open') + '"><i class="fas fa-' + (occ ?
+                        'user' : 'plus') + '"></i></div>';
+                }
+                return '<div class="room-card ' + room.css + '"><div class="accent"></div><div class="room-name">' +
+                    esc(room.name) + '</div><div class="room-meta">' + occupants.length + ' / ' + room.cap +
+                    ' beds</div><div class="room-capacity-bar"><div class="room-capacity-fill ' + fillClass +
+                    '" style="width:' + pct + '%"></div></div><div class="beds-row">' + beds + '</div></div>';
+            }).join('');
+        }
+
+        /* RENT LEDGER */
+        function renderLedger() {
+            const q = (document.getElementById('paySearch')?.value || '').toLowerCase();
+            const list = DB.payments.filter(p => !q || p.name.toLowerCase().includes(q) || (p.method || '').toLowerCase()
+                .includes(q));
+            const total = DB.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const bal = DB.payments.reduce((s, p) => s + Math.max(0, Number(p.balance || 0)), 0);
+            const over = DB.payments.reduce((s, p) => s + Math.max(0, -Number(p.balance || 0)), 0);
+            document.getElementById('totalCollected').textContent = '$' + total.toFixed(2);
+            document.getElementById('totalOutstanding').textContent = '$' + bal.toFixed(2);
+            document.getElementById('totalOverpaid').textContent = '$' + over.toFixed(2);
+            document.getElementById('ledgerBody').innerHTML = list.length ? list.map(p => {
+                const balNum = Number(p.balance || 0);
+                const chip = balNum > 0 ? '<span class="balance-chip neg">-$' + balNum.toFixed(2) +
+                    '</span>' : balNum < 0 ? '<span class="balance-chip pos">Overpaid</span>' :
+                    '<span class="balance-chip zero">$0</span>';
+                return '<tr><td>' + fmtDate(p.paidDate) + '</td><td><div class="name-cell">' + esc(p.name) +
+                    '</div></td><td>' + esc(p.month) + '</td><td><strong>$' + Number(p.amount).toFixed(2) +
+                    '</strong></td><td>' + chip + '</td><td>' + esc(p.method) +
+                    '</td><td style="color:var(--muted);font-size:.72rem">' + esc(p.ref || '—') +
+                    '</td><td><button class="btn btn-red btn-sm" onclick="removePayment(\'' + p.id +
+                    '\')"><i class="fas fa-trash"></i></button></td></tr>';
+            }).join('') :
+                '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-coins"></i><p>No payments recorded</p></div></td></tr>';
+            updateResidentDatalist();
+        }
+
+        function updateResidentDatalist() {
+            const dl = document.getElementById('residentList');
+            if (!dl) return;
+            dl.innerHTML = DB.residents.map(r => '<option value="' + esc(r.name) + '">').join('');
+        }
+
+        function addPayment(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('p'),
+                name: document.getElementById('pm_name').value.trim(),
+                month: document.getElementById('pm_month').value,
+                amount: parseFloat(document.getElementById('pm_amount').value) || 0,
+                balance: parseFloat(document.getElementById('pm_balance').value) || 0,
+                method: document.getElementById('pm_method').value,
+                ref: document.getElementById('pm_ref').value.trim(),
+                notes: document.getElementById('pm_notes').value.trim(),
+                paidDate: now(),
+                recordedBy: 'Admin'
+            };
+            DB.payments.push(data);
+            sbInsert('payments', { id: data.id, name: data.name, month: data.month, amount: data.amount, balance: data
+                    .balance, method: data.method, ref: data.ref, notes: data.notes, paid_date: data.paidDate,
+                recorded_by: 'Admin' });
+            const res = DB.residents.find(r => r.name.toLowerCase() === data.name.toLowerCase());
+            if (res && data.balance <= 0) { res.paymentStatus = 'Paid';
+                sbUpdate('residents', res.id, { payment_status: 'Paid' }); }
+            addActivity('Payment: $' + data.amount.toFixed(2) + ' from ' + data.name);
+            closeModal('addPaymentModal');
+            renderLedger();
+            renderResidents();
+            toast('Payment recorded!');
+            e.target.reset();
+            return false;
+        }
+
+        function removePayment(id) {
+            showConfirm('Remove Payment', 'Remove this payment record?', () => {
+                DB.payments = DB.payments.filter(p => p.id !== id);
+                sbDelete('payments', id);
+                renderLedger();
+                toast('Payment removed');
+            });
+        }
+
+        /* UTILITIES */
+        function renderPower() {
+            document.getElementById('powerBody').innerHTML = DB.power.length ? DB.power.map(p =>
+                '<tr><td>' + fmtDate(p.date) + '</td><td><strong>' + p.units + '</strong> kWh</td><td>$' + Number(p
+                    .amount).toFixed(2) + '</td><td>' + (p.balance || '—') + ' kWh</td><td style="color:var(--muted)">' +
+                esc(p.notes || '—') + '</td></tr>'
+            ).join('') :
+                '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-bolt"></i><p>No electricity records</p></div></td></tr>';
+        }
+
+        function renderWater() {
+            document.getElementById('waterBody').innerHTML = DB.water.length ? DB.water.map(w =>
+                '<tr><td>' + fmtDate(w.date) + '</td><td><strong>' + w.litres + 'L</strong></td><td>' + esc(w.supplier ||
+                    '—') + '</td><td>$' + Number(w.cost).toFixed(2) + '</td><td>' + esc(w.filled) +
+                '</td><td style="color:var(--muted)">' + esc(w.notes || '—') + '</td></tr>'
+            ).join('') :
+                '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-droplet"></i><p>No water records</p></div></td></tr>';
+        }
+
+        function addPower(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('pw'),
+                date: document.getElementById('pw_date').value,
+                units: parseFloat(document.getElementById('pw_units').value) || 0,
+                amount: parseFloat(document.getElementById('pw_amount').value) || 0,
+                balance: parseFloat(document.getElementById('pw_balance').value) || 0,
+                notes: document.getElementById('pw_notes').value.trim()
+            };
+            DB.power.push(data);
+            sbInsert('power_utilities', data);
+            addActivity('Electricity: ' + data.units + ' kWh added');
+            closeModal('addPowerModal');
+            renderPower();
+            toast('Saved!');
+            e.target.reset();
+            return false;
+        }
+
+        function addWater(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('wt'),
+                date: document.getElementById('wt_date').value,
+                litres: parseFloat(document.getElementById('wt_litres').value) || 0,
+                supplier: document.getElementById('wt_supplier').value.trim(),
+                cost: parseFloat(document.getElementById('wt_cost').value) || 0,
+                filled: document.getElementById('wt_filled').value,
+                notes: document.getElementById('wt_notes').value.trim()
+            };
+            DB.water.push(data);
+            sbInsert('water_utilities', data);
+            addActivity('Water: ' + data.litres + 'L delivered');
+            closeModal('addWaterModal');
+            renderWater();
+            toast('Saved!');
+            e.target.reset();
+            return false;
+        }
+
+        function switchUtil(tab) {
+            document.querySelectorAll('.util-tab').forEach(t => { t.classList.toggle('active', t.getAttribute(
+                    'onclick').includes("'" + tab + "'")); });
+            document.getElementById('util-power').style.display = tab === 'power' ? 'block' : 'none';
+            document.getElementById('util-water').style.display = tab === 'water' ? 'block' : 'none';
+        }
+
+        /* MAINTENANCE */
+        function renderMaintenance() {
+            const q = (document.getElementById('maintSearch')?.value || '').toLowerCase();
+            const list = DB.maintenance.filter(m => {
+                const matchFilter = maintFilter === 'all' || m.status === maintFilter;
+                const matchQ = !q || m.name.toLowerCase().includes(q) || (m.category || '').toLowerCase().includes(
+                    q) || roomName(m.room).toLowerCase().includes(q);
+                return matchFilter && matchQ;
+            });
+            const urg = u => u === 'Critical' || u === 'High' ? 'badge-red' : u === 'Medium' ? 'badge-amber' :
+                'badge-ghost';
+            const sta = s => s === 'Open' ? 'badge-red' : s === 'In Progress' ? 'badge-amber' : 'badge-green';
+            document.getElementById('maintBody').innerHTML = list.length ? list.map(m =>
+                '<tr><td>' + fmtDate(m.createdAt) + '</td><td><div class="name-cell">' + esc(m.name) +
+                '</div></td><td>' + roomName(m.room) + '</td><td>' + esc(m.category) +
+                '</td><td><span class="badge ' + urg(m.urgency) + '">' + m.urgency +
+                '</span></td><td><span class="badge ' + sta(m.status) + '">' + m.status +
+                '</span></td><td style="display:flex;gap:3px"><button class="btn btn-ghost btn-sm" onclick="viewMaint(\'' +
+                m.id + '\')"><i class="fas fa-eye"></i></button><button class="btn btn-ghost btn-sm" onclick="cycleMaint(\'' +
+                m.id + '\')"><i class="fas fa-arrow-rotate-right"></i></button></td></tr>'
+            ).join('') :
+                '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-wrench"></i><p>No maintenance requests</p></div></td></tr>';
+        }
+
+        function filterMaintenance(f, el) {
+            maintFilter = f;
+            document.querySelectorAll('.maint-filter').forEach(b => {
+                b.classList.toggle('active', b === el);
+                b.style.background = b === el ? 'var(--forest)' : '';
+                b.style.color = b === el ? '#fff' : '';
+                b.style.borderColor = b === el ? 'var(--forest)' : '';
+            });
+            renderMaintenance();
+        }
+
+        function cycleMaint(id) {
+            const m = DB.maintenance.find(x => x.id === id);
+            if (!m) return;
+            const cycle = { 'Open': 'In Progress', 'In Progress': 'Resolved', 'Resolved': 'Open' };
+            m.status = cycle[m.status] || 'Open';
+            if (m.status === 'Resolved') m.resolvedAt = now();
+            else m.resolvedAt = null;
+            sbUpdate('maintenance', id, { status: m.status, resolved_at: m.resolvedAt });
+            addActivity('Maintenance ' + m.id + ' → ' + m.status);
+            renderMaintenance();
+            toast('Status: ' + m.status, 'info');
+        }
+
+        function viewMaint(id) {
+            const m = DB.maintenance.find(x => x.id === id);
+            if (!m) return;
+            const urg = m.urgency === 'Critical' || m.urgency === 'High' ? 'badge-red' : m.urgency === 'Medium' ?
+                'badge-amber' : 'badge-ghost';
+            const sta = m.status === 'Open' ? 'badge-red' : m.status === 'In Progress' ? 'badge-amber' : 'badge-green';
+            document.getElementById('maintDetail').innerHTML =
+                '<div style="font-size:.82rem;line-height:2"><p><strong>Resident:</strong> ' + esc(m.name) +
+                '</p><p><strong>Room:</strong> ' + roomName(m.room) + '</p><p><strong>Category:</strong> ' + esc(m
+                    .category) + '</p><p><strong>Urgency:</strong> <span class="badge ' + urg + '">' + m.urgency +
+                '</span></p><p><strong>Status:</strong> <span class="badge ' + sta + '">' + m.status +
+                '</span></p><p><strong>Submitted:</strong> ' + fmtDT(m.createdAt) + '</p>' + (m.resolvedAt ?
+                    '<p><strong>Resolved:</strong> ' + fmtDT(m.resolvedAt) + '</p>' : '') +
+                '<p><strong>Description:</strong></p><p style="background:var(--surface2);padding:10px;border-radius:var(--r);margin-top:3px">' +
+                esc(m.description) + '</p></div>';
+            openModal('viewMaintModal');
+        }
+
+        /* INCIDENTS */
+        function renderIncidents() {
+            const q = (document.getElementById('incSearch')?.value || '').toLowerCase();
+            const list = DB.incidents.filter(i => {
+                const matchFilter = incFilter === 'all' || i.status === incFilter;
+                const matchQ = !q || i.submittedBy.toLowerCase().includes(q) || (i.type || '').toLowerCase().includes(
+                    q);
+                return matchFilter && matchQ;
+            });
+            const urg = u => u === 'Critical' || u === 'High' ? 'badge-red' : u === 'Medium' ? 'badge-amber' :
+                'badge-ghost';
+            const sta = s => s === 'Open' ? 'badge-red' : 'badge-green';
+            document.getElementById('incidentsBody').innerHTML = list.length ? list.map(i =>
+                '<tr><td>' + fmtDate(i.createdAt) + '</td><td><div class="name-cell">' + esc(i.submittedBy) +
+                '</div></td><td>' + roomName(i.room) + '</td><td>' + esc(i.type) +
+                '</td><td><span class="badge ' + urg(i.urgency) + '">' + i.urgency +
+                '</span></td><td><span class="badge ' + sta(i.status) + '">' + i.status +
+                '</span></td><td style="display:flex;gap:3px"><button class="btn btn-ghost btn-sm" onclick="viewIncident(\'' +
+                i.id + '\')"><i class="fas fa-eye"></i></button><button class="btn btn-ghost btn-sm" onclick="toggleIncident(\'' +
+                i.id + '\')"><i class="fas fa-' + (i.status === 'Closed' ? 'rotate-left' : 'check') +
+                '"></i></button></td></tr>'
+            ).join('') :
+                '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-flag"></i><p>No incidents found</p></div></td></tr>';
+        }
+
+        function filterIncidents(f, el) {
+            incFilter = f;
+            document.querySelectorAll('.inc-filter').forEach(b => {
+                b.classList.toggle('active', b === el);
+                b.style.background = b === el ? 'var(--forest)' : '';
+                b.style.color = b === el ? '#fff' : '';
+                b.style.borderColor = b === el ? 'var(--forest)' : '';
+            });
+            renderIncidents();
+        }
+
+        function viewIncident(id) {
+            const i = DB.incidents.find(x => x.id === id);
+            if (!i) return;
+            const urg = i.urgency === 'Critical' || i.urgency === 'High' ? 'badge-red' : i.urgency === 'Medium' ?
+                'badge-amber' : 'badge-ghost';
+            const sta = i.status === 'Open' ? 'badge-red' : 'badge-green';
+            document.getElementById('incidentDetail').innerHTML =
+                '<div style="font-size:.82rem;line-height:2"><p><strong>Reported by:</strong> ' + esc(i.submittedBy) +
+                '</p><p><strong>Room:</strong> ' + roomName(i.room) + '</p><p><strong>Type:</strong> ' + esc(i.type) +
+                '</p><p><strong>Urgency:</strong> <span class="badge ' + urg + '">' + i.urgency +
+                '</span></p><p><strong>Status:</strong> <span class="badge ' + sta + '">' + i.status +
+                '</span></p><p><strong>Submitted:</strong> ' + fmtDT(i.createdAt) + '</p>' + (i.closedAt ?
+                    '<p><strong>Closed:</strong> ' + fmtDT(i.closedAt) + '</p>' : '') +
+                '<p><strong>Description:</strong></p><p style="background:var(--surface2);padding:10px;border-radius:var(--r)">' +
+                esc(i.description) + '</p></div>';
+            openModal('viewIncidentModal');
+        }
+
+        function toggleIncident(id) {
+            const i = DB.incidents.find(x => x.id === id);
+            if (!i) return;
+            if (i.status === 'Closed') { i.status = 'Open';
+                i.closedAt = null; } else { i.status = 'Closed';
+                i.closedAt = now(); }
+            sbUpdate('incidents', id, { status: i.status, closed_at: i.closedAt });
+            addActivity('Incident ' + i.id + ' ' + i.status.toLowerCase());
+            renderIncidents();
+            toast('Incident ' + i.status.toLowerCase(), 'info');
+        }
+
+        /* NOTICES */
+        function renderAdminNotices() {
+            document.getElementById('adminNoticesList').innerHTML = DB.notices.length ? DB.notices.map(n => {
+                const cls = n.priority === 'Urgent' ? 'urgent' : n.priority === 'Important' ? 'important' : '';
+                const bc = n.priority === 'Urgent' ? 'badge-red' : n.priority === 'Important' ? 'badge-amber' :
+                    'badge-ghost';
+                return '<div class="card notice-card ' + cls + ' fade-up"><div class="notice-date">' + fmtDT(n
+                    .createdAt) + ' <span class="badge ' + bc + '">' + n.priority +
+                    '</span></div><div class="notice-title">' + esc(n.title) + '</div><div class="notice-body">' + esc(
+                        n.content) +
+                    '</div><button class="btn btn-red btn-sm" style="margin-top:10px" onclick="removeNotice(\'' + n.id +
+                    '\')"><i class="fas fa-trash"></i> Remove</button></div>';
+            }).join('') : '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No notices posted</p></div>';
+        }
+
+        function renderResNotices() {
+            document.getElementById('resNoticesList').innerHTML = DB.notices.length ? DB.notices.map(n => {
+                const cls = n.priority === 'Urgent' ? 'urgent' : n.priority === 'Important' ? 'important' : '';
+                const bc = n.priority === 'Urgent' ? 'badge-red' : n.priority === 'Important' ? 'badge-amber' :
+                    'badge-ghost';
+                return '<div class="card notice-card ' + cls + ' fade-up"><div class="notice-date">' + fmtDT(n
+                    .createdAt) + ' <span class="badge ' + bc + '">' + n.priority +
+                    '</span></div><div class="notice-title">' + esc(n.title) + '</div><div class="notice-body">' + esc(
+                        n.content) + '</div></div>';
+            }).join('') : '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No notices at this time</p></div>';
+        }
+
+        function addNotice(e) {
+            e.preventDefault();
+            const data = {
+                id: nextId('n'),
+                title: document.getElementById('nt_title').value.trim(),
+                content: document.getElementById('nt_content').value.trim(),
+                priority: document.getElementById('nt_priority').value,
+                createdAt: now()
+            };
+            DB.notices.unshift(data);
+            sbInsert('notices', { id: data.id, title: data.title, content: data.content, priority: data.priority,
+                created_at: data.createdAt });
+            addActivity('Notice posted: ' + data.title);
+            closeModal('addNoticeModal');
+            renderAdminNotices();
+            renderResNotices();
+            toast('Notice published!');
+            e.target.reset();
+            return false;
+        }
+
+        function removeNotice(id) {
+            showConfirm('Remove Notice', 'Remove this notice?', () => {
+                DB.notices = DB.notices.filter(n => n.id !== id);
+                sbDelete('notices', id);
+                renderAdminNotices();
+                renderResNotices();
+                toast('Notice removed');
+            });
+        }
+
+        /* SETTINGS */
+        function updateWA() { ADMIN_WA = document.getElementById('settingWA').value.trim().replace(/\D/g, '');
+            toast('WhatsApp number updated'); }
+
+        function updatePropName() { toast('Property name saved'); }
+
+        /* ═══════════════ EXPORTS ═══════════════ */
+        function getExportData(type) {
+            let headers = [],
+                rows = [];
+            const exporters = {
+                residents: () => { headers = ['Name', 'Phone', 'Institution', 'ID', 'Room', 'Status', 'Payment',
+                        'Check-In'
+                    ];
+                    DB.residents.forEach(r => rows.push([r.name, r.phone, r.institution, r.idNumber, roomName(r
+                        .room), r.status, r.paymentStatus, r.checkinDate
+                    ])); },
+                payments: () => { headers = ['Date', 'Name', 'Month', 'Amount', 'Balance', 'Method', 'Reference'];
+                    DB.payments.forEach(p => rows.push([fmtDate(p.paidDate), p.name, p.month, p.amount, p.balance, p
+                        .method, p.ref
+                    ])); },
+                incidents: () => { headers = ['Date', 'Reporter', 'Room', 'Type', 'Urgency', 'Status', 'Description'];
+                    DB.incidents.forEach(i => rows.push([fmtDate(i.createdAt), i.submittedBy, roomName(i.room), i.type,
+                        i.urgency, i.status, i.description
+                    ])); },
+                maintenance: () => { headers = ['Date', 'Name', 'Room', 'Category', 'Urgency', 'Status',
+                        'Description'
+                    ];
+                    DB.maintenance.forEach(m => rows.push([fmtDate(m.createdAt), m.name, roomName(m.room), m.category,
+                        m.urgency, m.status, m.description
+                    ])); },
+                checkins: () => { headers = ['Date', 'Name', 'Phone', 'Institution', 'ID', 'Room', 'Status',
+                    'Deposit'];
+                    DB.checkins.forEach(c => rows.push([c.date, c.name, c.phone, c.institution, c.idNumber, roomName(c
+                        .room), c.status, c.deposit
+                    ])); },
+                checkouts: () => { headers = ['Date', 'Name', 'Room', 'Key Returned', 'Condition',
+                        'Forward Contact'
+                    ];
+                    DB.checkouts.forEach(c => rows.push([c.date, c.name, roomName(c.room), c.keyReturned, c.condition,
+                        c.forwardContact
+                    ])); }
+            };
+            if (exporters[type]) exporters[type]();
+            return { headers, rows, title: type.charAt(0).toUpperCase() + type.slice(1) };
+        }
+
+        function exportCSV(type) {
+            const d = getExportData(type);
+            if (!d.rows.length) { toast('No data to export', 'warning'); return; }
+            const csv = [d.headers].concat(d.rows).map(r => r.map(c => '"' + String(c || '').replace(/"/g, '""') + '"')
+                .join(',')).join('\n');
+            dlFile(csv, 'text/csv', type + '_export.csv');
+            toast('Exported ' + type + '.csv');
+        }
+
+        function dlFile(content, mime, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function exportPDF(type) {
+            const d = getExportData(type);
+            if (!d.rows.length) { toast('No data', 'warning'); return; }
+            const doc = new window.jspdf.jsPDF('l', 'mm', 'a4');
+            addPDFHead(doc, d.title + ' Report');
+            doc.autoTable({
+                head: [d.headers],
+                body: d.rows,
+                startY: 32,
+                theme: 'grid',
+                headStyles: { fillColor: [11, 59, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 7 },
+                margin: { left: 10, right: 10 }
+            });
+            addPDFFoot(doc);
+            doc.save(type + '_report.pdf');
+            toast('Exported PDF');
+        }
+
+        function addPDFHead(doc, title) {
+            const w = doc.internal.pageSize.width;
+            doc.setFillColor(11, 59, 42);
+            doc.rect(0, 0, w, 26, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(15);
+            doc.text('ResidentHub', 11, 12);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(9);
+            doc.text(title, 11, 20);
+            doc.setFontSize(7);
+            doc.text('Generated: ' + new Date().toLocaleString(), w - 11, 11, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+        }
+
+        function addPDFFoot(doc) {
+            const pages = doc.internal.getNumberOfPages();
+            const w = doc.internal.pageSize.width;
+            const h = doc.internal.pageSize.height;
+            for (let i = 1; i <= pages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(6);
+                doc.setTextColor(160);
+                doc.text('ResidentHub — Smart Hostel Management  |  Page ' + i + '/' + pages, w / 2, h - 6, { align: 'center' });
+            }
+        }
+
+        /* ═══════════════ RULES CONTENT ═══════════════ */
+        function populateRules() {
+            document.getElementById('rulesContent').innerHTML = `
+        <h4>1. General Conduct</h4>
+        <ol><li>All residents must treat each other, staff, and property with respect.</li>
+        <li>Noise must be kept to acceptable levels, especially between 22:00 and 06:00.</li>
+        <li>Curfew is 20:00hrs — gates will be locked and dogs will be set free.</li>
+        <li>No illegal substances, weapons, or dangerous items are permitted.</li>
+        <li>Visitors must be signed in/out and are not permitted overnight without prior approval.</li></ol>
+        <h4>2. Room &amp; Property Care</h4>
+        <ol><li>Residents are responsible for keeping their rooms clean and tidy.</li>
+        <li>Kitchen, toilets, and common areas must always be clean — practice "clean as you go".</li>
+        <li>No alterations may be made to rooms (painting, drilling, fixtures, etc.).</li>
+        <li>Any damage must be reported immediately and may result in charges.</li>
+        <li>Room inspections may be conducted with 24 hours' notice.</li></ol>
+        <h4>3. Safety &amp; Security</h4>
+        <ol><li>Doors must be locked when leaving. Lost keys incur a replacement fee.</li>
+        <li>Tampering with safety equipment is grounds for immediate eviction.</li>
+        <li>Report suspicious activity to management immediately.</li></ol>
+        <h4>4. Payments &amp; Utilities</h4>
+        <ol><li>Rent is due on the 1st of each month. Late payments incur a penalty.</li>
+        <li>Excessive utility usage may be billed separately.</li>
+        <li>Management reserves the right to revise utility contributions with 7 days' notice.</li></ol>
+        <h4>5. Check-Out Procedures</h4>
+        <ol><li>Written notice of departure must be given at least 14 days in advance.</li>
+        <li>All keys must be returned. Room must be cleaned and cleared.</li>
+        <li>A final inspection will be conducted before deposit refund.</li></ol>`;
+        }
+        populateRules();
+
+        /* ═══════════════ SQL SCHEMA ═══════════════ */
+        document.getElementById('sqlBlock').textContent = `-- ================================================================
+        -- ResidentHub v3.0 — Complete Supabase Setup SQL
+        -- Run this in your Supabase SQL Editor (https://supabase.com/dashboard)
+        -- ================================================================
+
+        -- 1. RESIDENTS TABLE
+        CREATE TABLE IF NOT EXISTS residents (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          phone TEXT,
+          institution TEXT,
+          id_number TEXT,
+          room TEXT,
+          status TEXT DEFAULT 'New',
+          checkin_date DATE,
+          payment_status TEXT DEFAULT 'Pending',
+          notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 2. CHECK-INS
+        CREATE TABLE IF NOT EXISTS checkins (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          phone TEXT,
+          institution TEXT,
+          id_number TEXT,
+          room TEXT,
+          date DATE,
+          status TEXT,
+          deposit TEXT,
+          notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 3. CHECK-OUTS
+        CREATE TABLE IF NOT EXISTS checkouts (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          room TEXT,
+          date DATE,
+          key_returned TEXT,
+          condition_notes TEXT,
+          forward_contact TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 4. RULES ACCEPTANCE
+        CREATE TABLE IF NOT EXISTS rules_acceptance (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          room TEXT,
+          accepted BOOLEAN DEFAULT TRUE,
+          accepted_at TIMESTAMPTZ DEFAULT NOW(),
+          version TEXT
+        );
+
+        -- 5. RENT LEDGER (PAYMENTS)
+        CREATE TABLE IF NOT EXISTS payments (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          month TEXT,
+          amount NUMERIC DEFAULT 0,
+          balance NUMERIC DEFAULT 0,
+          method TEXT,
+          ref TEXT,
+          notes TEXT,
+          paid_date TIMESTAMPTZ DEFAULT NOW(),
+          recorded_by TEXT DEFAULT 'Admin'
+        );
+
+        -- 6. INCIDENTS
+        CREATE TABLE IF NOT EXISTS incidents (
+          id TEXT PRIMARY KEY,
+          submitted_by TEXT NOT NULL,
+          room TEXT,
+          type TEXT,
+          urgency TEXT,
+          description TEXT,
+          status TEXT DEFAULT 'Open',
+          admin_notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          closed_at TIMESTAMPTZ
+        );
+
+        -- 7. MAINTENANCE REQUESTS
+        CREATE TABLE IF NOT EXISTS maintenance (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          room TEXT,
+          category TEXT,
+          urgency TEXT,
+          description TEXT,
+          status TEXT DEFAULT 'Open',
+          assigned_to TEXT,
+          admin_notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          resolved_at TIMESTAMPTZ
+        );
+
+        -- 8. ELECTRICITY UTILITIES
+        CREATE TABLE IF NOT EXISTS power_utilities (
+          id TEXT PRIMARY KEY,
+          date DATE,
+          units NUMERIC,
+          amount NUMERIC,
+          balance NUMERIC,
+          notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 9. WATER UTILITIES
+        CREATE TABLE IF NOT EXISTS water_utilities (
+          id TEXT PRIMARY KEY,
+          date DATE,
+          litres NUMERIC,
+          supplier TEXT,
+          cost NUMERIC,
+          filled TEXT,
+          notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 10. NOTICES
+        CREATE TABLE IF NOT EXISTS notices (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          content TEXT,
+          priority TEXT DEFAULT 'Normal',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- ================================================================
+        -- ENABLE ROW LEVEL SECURITY
+        -- ================================================================
+        ALTER TABLE residents ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE checkins ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE checkouts ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE rules_acceptance ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE maintenance ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE power_utilities ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE water_utilities ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE notices ENABLE ROW LEVEL SECURITY;
+
+        -- ================================================================
+        -- POLICIES: Admin (authenticated) = full access
+        -- Public (anon) = INSERT only for forms, SELECT for notices
+        -- ================================================================
+        CREATE POLICY "admin_all_residents" ON residents FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_checkins" ON checkins FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_checkouts" ON checkouts FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_rules" ON rules_acceptance FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_payments" ON payments FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_incidents" ON incidents FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_maintenance" ON maintenance FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_power" ON power_utilities FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_water" ON water_utilities FOR ALL USING (auth.role() = 'authenticated');
+        CREATE POLICY "admin_all_notices" ON notices FOR ALL USING (auth.role() = 'authenticated');
+
+        -- Public can insert
+        CREATE POLICY "public_insert_checkins" ON checkins FOR INSERT WITH CHECK (true);
+        CREATE POLICY "public_insert_checkouts" ON checkouts FOR INSERT WITH CHECK (true);
+        CREATE POLICY "public_insert_rules" ON rules_acceptance FOR INSERT WITH CHECK (true);
+        CREATE POLICY "public_insert_incidents" ON incidents FOR INSERT WITH CHECK (true);
+        CREATE POLICY "public_insert_maintenance" ON maintenance FOR INSERT WITH CHECK (true);
+        CREATE POLICY "public_read_notices" ON notices FOR SELECT USING (true);
+
+        -- ================================================================
+        -- Create admin user in Supabase Auth:
+        -- Go to Authentication > Users > Add User
+        -- Email: your-admin@email.com
+        -- Password: your-secure-password
+        -- ================================================================`;
+
+        /* ═══════════════ INIT ═══════════════ */
+        document.getElementById('ci_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('co_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('pw_date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('wt_date').value = new Date().toISOString().split('T')[0];
+        if (document.getElementById('pm_month')) document.getElementById('pm_month').value = new Date().toISOString().slice(0,
+            7);
+        renderResNotices();
+        renderResRoomsGrid();
+        loadAll();
+
+        console.log('🏠 ResidentHub v3.0 — Smart Hostel Management System');
+        console.log('📡 Supabase: ' + SB_URL);
+        console.log('🛏️  Total Capacity: ' + TOTAL_CAP + ' beds across ' + ROOMS.length + ' rooms');
+        console.log('✅ Ready. Switch to Admin mode to sign in.');
+    </script>
+</body>
+</html>
